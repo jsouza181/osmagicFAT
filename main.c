@@ -1,9 +1,8 @@
 #include <stdio.h>
+#include "bootsector.h"
 
 int main(int argc, char *argv[]) {
   FILE *fileImgPtr;
-  unsigned char bootSector[512];
-  int i;
 
   //Check for correct number of arguments.
   if(argc != 2) {
@@ -19,24 +18,11 @@ int main(int argc, char *argv[]) {
       return 1;
     }
 
-  //Read the boot sector
-  for(i = 0; i < 512; ++i)
-    bootSector[i] = getc(fileImgPtr);
-    //Check for end of file?
+  //Read and store the boot sector data.
+  readBootSector(fileImgPtr);
 
   //Close the file image.
   fclose(fileImgPtr);
-
-  //Print contents in hex
-  for(i = 0; i < 512; ++i) {
-    printf("%02X ", bootSector[i]);
-
-    //Spacing
-    if(i > 0 && (i + 1) % 4 == 0)
-    printf("  ");
-    if(i > 0 && (i + 1) % 24 == 0)
-    printf("\n");
-  }
 
   return 0;
 }
