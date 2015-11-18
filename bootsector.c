@@ -2,47 +2,30 @@
 #include "bootsector.h"
 #include "utilities.h"
 
-int readBootSector(FILE *fileImgPtr) {
-  int i;
-  unsigned char bootSector[512];
-
-  for(i = 0; i < 512; ++i)
-    bootSector[i] = getc(fileImgPtr);
-    //Check for end of file?
-
-  printHex(bootSector);
-
-  return 0;
+unsigned int bytesPerSector(unsigned char *bootSector) {
+  return swapTwoBytes(bootSector[11], bootSector[12]);
 }
-
-/*
- * Gather important boot sector info.
- */
-int bytesPerSector(unsigned char *bootSector) {
-  return 1;
+unsigned int sectorsPerCluster(unsigned char *bootSector) {
+  return bootSector[13];
 }
-int sectorsPerCluster(unsigned char *bootSector) {
-  return 1;
+unsigned int reservedSectorCount(unsigned char *bootSector) {
+  return swapTwoBytes(bootSector[14], bootSector[15]);
 }
-int reservedSectorCount(unsigned char *bootSector) {
-  return 1;
+unsigned int numberOfFATS(unsigned char *bootSector) {
+  return bootSector[16];
 }
-int numberOfFATS(unsigned char *bootSector) {
-  return 1;
+unsigned int fatSize32(unsigned char *bootSector) {
+  return swapFourBytes(bootSector[36], bootSector[37], bootSector[38],
+                        bootSector[39]);
 }
-int fatSize32(unsigned char *bootSector) {
-  return 1;
-}
-int rootCluster(unsigned char *bootSector) {
+unsigned int rootCluster(unsigned char *bootSector) {
   return 1;
 }
 
 void printHex(unsigned char *bootSector) {
-  int i;
-  printf("Bytes per sector: %d\n", swapBytes(bootSector[11], bootSector[12]));
 
   //Print contents in hex
-  for(i = 0; i < 512; ++i) {
+  for(int i = 0; i < 512; ++i) {
     printf("%02X ", bootSector[i]);
 
     //Spacing
@@ -51,4 +34,24 @@ void printHex(unsigned char *bootSector) {
     if(i > 0 && (i + 1) % 24 == 0)
     printf("\n");
   }
+}
+
+int readBootSector(FILE *fileImgPtr, unsigned int *bootSectorData) {
+  unsigned char bootSector[512];
+
+  for(int i = 0; i < 512; ++i)
+    bootSector[i] = getc(fileImgPtr);
+    //Check for end of file?
+
+  //Gather important boot sector info.
+  bootSectorData[0] = bytesPerSector(bootSector);
+  bootSectorData[1] = sectorsPerCluster(bootSector);
+  bootSectorData[2] = reservedSectorCount(bootSector);
+  bootSectorData[3] = numberOfFATS(bootSector);
+  bootSectorData[4] = fatSize32(bootSector);
+  bootSectorData[5] = rootCluster(bootSector);
+
+  //printHex(bootSector);
+
+  return 0;
 }
