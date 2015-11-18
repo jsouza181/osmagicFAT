@@ -19,7 +19,8 @@ unsigned int fatSize32(unsigned char *bootSector) {
                         bootSector[39]);
 }
 unsigned int rootCluster(unsigned char *bootSector) {
-  return 1;
+  return swapFourBytes(bootSector[44], bootSector[45], bootSector[46],
+                        bootSector[47]);
 }
 
 void printHex(unsigned char *bootSector) {
@@ -34,6 +35,7 @@ void printHex(unsigned char *bootSector) {
     if(i > 0 && (i + 1) % 24 == 0)
     printf("\n");
   }
+  printf("\n");
 }
 
 int readBootSector(FILE *fileImgPtr, unsigned int *bootSectorData) {
@@ -51,7 +53,7 @@ int readBootSector(FILE *fileImgPtr, unsigned int *bootSectorData) {
   bootSectorData[4] = fatSize32(bootSector);
   bootSectorData[5] = rootCluster(bootSector);
 
-  //printHex(bootSector);
+  printHex(bootSector);
 
   return 0;
 }
