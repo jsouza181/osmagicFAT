@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "bootsector.h"
+#include "utilities.h"
 
 int readBootSector(FILE *fileImgPtr) {
   int i;
@@ -14,8 +15,31 @@ int readBootSector(FILE *fileImgPtr) {
   return 0;
 }
 
+/*
+ * Gather important boot sector info.
+ */
+int bytesPerSector(unsigned char *bootSector) {
+  return 1;
+}
+int sectorsPerCluster(unsigned char *bootSector) {
+  return 1;
+}
+int reservedSectorCount(unsigned char *bootSector) {
+  return 1;
+}
+int numberOfFATS(unsigned char *bootSector) {
+  return 1;
+}
+int fatSize32(unsigned char *bootSector) {
+  return 1;
+}
+int rootCluster(unsigned char *bootSector) {
+  return 1;
+}
+
 void printHex(unsigned char *bootSector) {
   int i;
+  printf("Bytes per sector: %d\n", swapBytes(bootSector[11], bootSector[12]));
 
   //Print contents in hex
   for(i = 0; i < 512; ++i) {
