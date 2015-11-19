@@ -1,10 +1,13 @@
 #ifndef BOOTSECTOR_H
 #define BOOTSECTOR_H
 
-/*
- *Function: int fseek (FILE *stream, long int offset, int whence)
-    The value of whence must be one of the constants SEEK_SET, SEEK_CUR, or SEEK_END,
- */
+// fsMetadata definitions
+#define BYTES_PER_SECTOR 0
+#define SECTORS_PER_CLUSTER 1
+#define RESERVED_SECTOR_COUNT 2
+#define NUMBER_OF_FATS 3
+#define FAT_SIZE 4
+#define ROOT_CLUSTER 5
 
 int readBootSector(FILE *fileImgPtr, unsigned int *fsMetadata);
 

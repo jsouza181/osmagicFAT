@@ -56,14 +56,14 @@ unsigned int rootCluster(FILE *fileImgPtr) {
 
 int readBootSector(FILE *fileImgPtr, unsigned int *fsMetadata) {
   //Gather important boot sector info.
-  fsMetadata[0] = bytesPerSector(fileImgPtr);
-  fsMetadata[1] = sectorsPerCluster(fileImgPtr);
-  fsMetadata[2] = reservedSectorCount(fileImgPtr);
-  fsMetadata[3] = numberOfFATS(fileImgPtr);
-  fsMetadata[4] = fatSize32(fileImgPtr);
-  fsMetadata[5] = rootCluster(fileImgPtr);
+  fsMetadata[BYTES_PER_SECTOR] = bytesPerSector(fileImgPtr);
+  fsMetadata[SECTORS_PER_CLUSTER] = sectorsPerCluster(fileImgPtr);
+  fsMetadata[RESERVED_SECTOR_COUNT] = reservedSectorCount(fileImgPtr);
+  fsMetadata[NUMBER_OF_FATS] = numberOfFATS(fileImgPtr);
+  fsMetadata[FAT_SIZE] = fatSize32(fileImgPtr);
+  fsMetadata[ROOT_CLUSTER] = rootCluster(fileImgPtr);
 
-  printSector(fileImgPtr, 0, 512);
+  printSector(fileImgPtr, 0, fsMetadata[BYTES_PER_SECTOR]);
 
   return 0;
 }
