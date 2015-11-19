@@ -4,7 +4,7 @@
 int main(int argc, char *argv[]) {
   FILE *fileImgPtr;
   //Contains necessary metadata for the file system.
-  unsigned int bootSectorData[16];
+  unsigned int fsMetadata[16];
 
   //Check for correct number of arguments.
   if(argc != 2) {
@@ -21,9 +21,9 @@ int main(int argc, char *argv[]) {
     }
 
   //Read and store the boot sector data.
-  readBootSector(fileImgPtr, bootSectorData);
+  readBootSector(fileImgPtr, fsMetadata);
   for (int i = 0; i < 16; ++i)
-    printf("Boot Sector Data %d: %d\n", i, bootSectorData[i]);
+    printf("Boot Sector Data %d: %d\n", i, fsMetadata[i]);
 
   //Close the file image.
   fclose(fileImgPtr);

@@ -1,3 +1,4 @@
+#include <stdio.h>
 
 //Find the value of two bytes swapped for littleEndian and "concatenated".
 unsigned int swapTwoBytes(unsigned int byteA, unsigned int byteB) {
@@ -23,4 +24,33 @@ unsigned int swapFourBytes(unsigned int byteA, unsigned int byteB,
   ret = ret | byteA;
 
   return ret;
+}
+
+/*
+ * Testing function. Used to display the desired sector of the file system image
+ * in hex format. offset is the byte to start reading from.
+*/
+void printSector(FILE *fileImgPtr, int offset, int sectorSize) {
+  // Save original position of the file pointer.
+  int originalPos;
+  originalPos = ftell(fileImgPtr);
+
+  // Seek to the desired byte
+  fseek(fileImgPtr, offset, SEEK_SET);
+
+  //Print contents of sector in hex
+  for(int i = 0; i < sectorSize; ++i) {
+    printf("%02X ", getc(fileImgPtr));
+
+    //Spacing
+    if(i > 0 && (i + 1) % 4 == 0)
+    printf("  ");
+    if(i > 0 && (i + 1) % 24 == 0)
+    printf("\n");
+  }
+  printf("\n");
+
+  // Restore original position of file pointer.
+  fseek(fileImgPtr, originalPos, SEEK_SET);
+
 }
