@@ -45,7 +45,7 @@ void printSector(FILE *fileImgPtr, int offset, int sectorSize) {
     //Spacing
     if(i > 0 && (i + 1) % 4 == 0)
     printf("  ");
-    if(i > 0 && (i + 1) % 24 == 0)
+    if(i > 0 && (i + 1) % 16 == 0)
     printf("\n");
   }
   printf("\n");
