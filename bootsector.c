@@ -2,7 +2,7 @@
  * bootsector.c retrieves all important file system metadata from the boot
  * sector, and also calculates any values that will be used again. Everything
  * that is retrieved or calculated is stored in fsMetadata, which is declared
- * in main()'s scope, so that the values can be used in the rest of the program.
+ * globally, so that the values can be used in the rest of the program.
  */
 
 #include <stdio.h>
@@ -93,7 +93,9 @@ int readBootSector(FILE *fileImgPtr) {
   fsMetadata[ROOT_DIR_SECTORS] = rootDirectorySectors(fileImgPtr);
   fsMetadata[FIRST_DATA_SECTOR] = firstDataSector(fileImgPtr);
 
-  printSector(fileImgPtr, 0, fsMetadata[BYTES_PER_SECTOR]);
+  //printSector(fileImgPtr, 0, fsMetadata[BYTES_PER_SECTOR]);
+  printf("Next cluster of root is: %08X\n",
+          getNextCluster(fileImgPtr, fsMetadata[ROOT_CLUSTER]));
 
   return 0;
 }

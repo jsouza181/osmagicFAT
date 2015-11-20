@@ -6,5 +6,7 @@ unsigned int swapFourBytes(unsigned int byteA, unsigned int byteB,
                             unsigned int byteC, unsigned int byteD);
 
 void printSector(FILE *fileImgPtr, int offset, int sectorSize);
+unsigned int getSector(unsigned int clusterNumber);
+unsigned int getNextCluster(FILE *fileImgPtr, unsigned int clusterNumber);
 
 #endif
