@@ -16,4 +16,4 @@ utilities.o: utilities.c utilities.h
 	$(CC) $(CFLAGS) -c utilities.c
 
 clean:
-	rm *.o osmagicFAT
+	rm -f *.o osmagicFAT
