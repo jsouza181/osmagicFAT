@@ -6,7 +6,7 @@
  */
 
 #include <stdio.h>
-#include "bootsector.h"
+#include "metadata.h"
 #include "utilities.h"
 
 //Global array that contains necessary metadata for the file system.
@@ -92,10 +92,6 @@ int readBootSector(FILE *fileImgPtr) {
   fsMetadata[ROOT_ENT_CNT] = rootEntryCount(fileImgPtr);
   fsMetadata[ROOT_DIR_SECTORS] = rootDirectorySectors(fileImgPtr);
   fsMetadata[FIRST_DATA_SECTOR] = firstDataSector(fileImgPtr);
-
-  //printSector(fileImgPtr, 0, fsMetadata[BYTES_PER_SECTOR]);
-  printf("Next cluster of root is: %08X\n",
-          getNextCluster(fileImgPtr, fsMetadata[ROOT_CLUSTER]));
 
   return 0;
 }
