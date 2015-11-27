@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "commands.h"
 #include "main.h"
 #include "metadata.h"
 #include "utilities.h"
@@ -41,13 +42,14 @@ int main(int argc, char *argv[]) {
   getDirEntries(fileImgPtr, fsMetadata[ROOT_CLUSTER], &currentDir);
 
   // Testing: print contents of root directory.
-  for(int i = 0; i < currentDir.size; ++i) {
+  /*for(int i = 0; i < currentDir.size; ++i) {
     for(int j = 0; j < 32; ++j) {
       printf("%c ", currentDir.dirEntries[i][j]);
     }
     printf("\n");
   }
   printf("\n");
+  */
 
   printf("Please input a command. Type 'quit' to quit program.\n");
   //Loop to perform commands until user exits.
@@ -76,7 +78,9 @@ int main(int argc, char *argv[]) {
     else if (strcmp(cmds[0], "rm") == 0){}
     else if (strcmp(cmds[0], "size") == 0){}
     else if (strcmp(cmds[0], "cd") == 0){}
-    else if (strcmp(cmds[0], "ls") == 0){}
+    else if (strcmp(cmds[0], "ls") == 0) {
+      ls(currentDir);
+    }
     else if (strcmp(cmds[0], "mkdir") == 0){}
     else if (strcmp(cmds[0], "rmdir") == 0){}
     else if (strcmp(cmds[0], "read") == 0){}
