@@ -6,7 +6,7 @@ default: osmagicFAT
 osmagicFAT: main.o metadata.o utilities.o
 	$(CC) $(CFLAGS) -o osmagicFAT main.o metadata.o utilities.o
 
-main.o: main.c
+main.o: main.c main.h
 	$(CC) $(CFLAGS) -c main.c
 
 metadata.o: metadata.c metadata.h
@@ -16,4 +16,4 @@ utilities.o: utilities.c utilities.h
 	$(CC) $(CFLAGS) -c utilities.c
 
 clean:
-	rm *.o osmagicFAT
+	rm -f *.o osmagicFAT
