@@ -2,31 +2,54 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "bootsector.h"
+#include "commands.h"
 #include "main.h"
+#include "metadata.h"
+#include "utilities.h"
 
 int main(int argc, char *argv[]) {
   FILE *fileImgPtr;
   int runLoop = 1;
+  // Array of current directory entries. Each entry represented as char*.
+  Directory currentDir;
+  // Initialize the array of entries.
+  currentDir.dirEntries = (unsigned char **) malloc(0 * sizeof(unsigned char *));
+  currentDir.size = 0;
 
-  //Check for correct number of arguments.
+  // Check for correct number of arguments.
   if(argc != 2) {
     printf("Error: Incorrect number of arguments.\n");
     printf("Expected: osmagicFAT <file image>\n");
     return 1;
   }
 
-  //Open the file image.
+  // Open the file image.
   fileImgPtr = fopen(argv[1], "rb");
     if(fileImgPtr == NULL) {
       printf("Error: could not open file image\n.");
       return 1;
     }
 
-  //Read and store the boot sector data.
+  // Read and store the boot sector data.
   readBootSector(fileImgPtr);
+
+  /*
   for (int i = 0; i < 16; ++i)
     printf("Boot Sector Data %d: %d\n", i, fsMetadata[i]);
+    */
+
+  // Read and store the root directory.
+  getDirEntries(fileImgPtr, fsMetadata[ROOT_CLUSTER], &currentDir);
+
+  // Testing: print contents of root directory.
+  /*for(int i = 0; i < currentDir.size; ++i) {
+    for(int j = 0; j < 32; ++j) {
+      printf("%c ", currentDir.dirEntries[i][j]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+  */
 
   printf("Please input a command. Type 'quit' to quit program.\n");
   //Loop to perform commands until user exits.
@@ -55,7 +78,9 @@ int main(int argc, char *argv[]) {
     else if (strcmp(cmds[0], "rm") == 0){}
     else if (strcmp(cmds[0], "size") == 0){}
     else if (strcmp(cmds[0], "cd") == 0){}
-    else if (strcmp(cmds[0], "ls") == 0){}
+    else if (strcmp(cmds[0], "ls") == 0) {
+      ls(currentDir);
+    }
     else if (strcmp(cmds[0], "mkdir") == 0){}
     else if (strcmp(cmds[0], "rmdir") == 0){}
     else if (strcmp(cmds[0], "read") == 0){}
@@ -73,6 +98,12 @@ int main(int argc, char *argv[]) {
   //Close the file image.
   fclose(fileImgPtr);
   printf("Exiting program...\n");
+
+  // Free the dynamically allocated current directory.
+  for(int i = 0; i < currentDir.size; ++i)
+    free(currentDir.dirEntries[i]);
+
+  free(currentDir.dirEntries);
 
   return 0;
 }

@@ -1,5 +1,5 @@
-#ifndef BOOTSECTOR_H
-#define BOOTSECTOR_H
+#ifndef METADATA_H
+#define METADATA_H
 
 /* fsMetadata definitions */
 #define BYTES_PER_SECTOR 0
@@ -18,7 +18,7 @@
 // The first data sector (NOT THE FIRST BYTE!)
 #define FIRST_DATA_SECTOR 8
 
-#define EOC 0x0FFFFFF8
+
 
 extern unsigned int fsMetadata[16];
 
