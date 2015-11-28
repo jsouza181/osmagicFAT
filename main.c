@@ -61,6 +61,7 @@ int main(int argc, char *argv[]) {
     */
 
     // Print prompt and get user input.
+    printf("Current cluster: %d\n", currentDirCluster);
     printPrompt();
     if (fgets(input, 256, stdin) == NULL){
       printf("Error! Invalid input!\n");
@@ -77,7 +78,15 @@ int main(int argc, char *argv[]) {
     else if (strcmp(cmds[0], "create") == 0){}
     else if (strcmp(cmds[0], "rm") == 0){}
     else if (strcmp(cmds[0], "size") == 0){}
-    else if (strcmp(cmds[0], "cd") == 0){}
+    else if (strcmp(cmds[0], "cd") == 0) {
+/***Check for number of arguments***/
+/***Check for directory name size***/
+      unsigned int newClusterNum = 0;
+      unsigned int *newClusterPtr = &newClusterNum;
+      if(cd(currentDir, cmds[1], newClusterPtr)) {
+        currentDirCluster = *newClusterPtr;
+      }
+    }
     else if (strcmp(cmds[0], "ls") == 0) {
       ls(currentDir);
     }

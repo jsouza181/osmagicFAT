@@ -16,6 +16,7 @@ typedef struct {
 unsigned int swapTwoBytes(unsigned int byteA, unsigned int byteB);
 unsigned int swapFourBytes(unsigned int byteA, unsigned int byteB,
                             unsigned int byteC, unsigned int byteD);
+void capFilename(char *filename);
 
 void printSector(FILE *fileImgPtr, unsigned int sectorNum);
 unsigned int getSector(unsigned int clusterNumber);

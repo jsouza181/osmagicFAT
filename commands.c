@@ -21,15 +21,17 @@ void ls(Directory dir) {
   printf("\n");
 }
 
-void cd(char *dirName) {
+// Return the first cluster of the provided directory.
+int cd(Directory currentDir, char *targetDir, unsigned int *clusterNum) {
+  // Check if the provided name exists in the current directory.
+  if(findFilenameCluster(currentDir, targetDir, clusterNum)) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
 
-  // only need to reset currentDirCluster?
-
-  // Free old current directory.
-  // Free the dynamically allocated current directory.
-  /*for(int i = 0; i < currentDir.size; ++i)
-    free(currentDir.dirEntries[i]);
-
-  free(currentDir.dirEntries);
-  */
 }
+
+//How much space is left in cluster to write?
+//Mod file size with number of 512 bytes

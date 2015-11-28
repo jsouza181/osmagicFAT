@@ -3,8 +3,10 @@
  * needed across the entire program.
  */
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "metadata.h"
 #include "utilities.h"
 
@@ -32,6 +34,13 @@ unsigned int swapFourBytes(unsigned int byteA, unsigned int byteB,
   ret = ret | byteA;
 
   return ret;
+}
+
+// Capitalize a filename.
+void capFilename(char *filename) {
+  for(int i = 0; i < strlen(filename); ++i) {
+    filename[i] = toupper(filename[i]);
+  }
 }
 
 /*

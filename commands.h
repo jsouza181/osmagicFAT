@@ -9,6 +9,6 @@
 
 void open(Directory dir, char *filename, int flag);
 void ls(Directory dir);
-void cd(char *dirName);
+int cd(Directory currentDir, char *targetDir, unsigned int *clusterNum);
 
 #endif
