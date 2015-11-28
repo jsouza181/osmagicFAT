@@ -3,10 +3,15 @@
 
 #define EOC 0x0FFFFFF8
 
-typedef struct directory {
+typedef struct {
   unsigned char ** dirEntries;
   unsigned int size;
 } Directory;
+/*
+typedef struct {
+  char filename[11]
+}
+*/
 
 unsigned int swapTwoBytes(unsigned int byteA, unsigned int byteB);
 unsigned int swapFourBytes(unsigned int byteA, unsigned int byteB,

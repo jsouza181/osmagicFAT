@@ -10,11 +10,6 @@
 int main(int argc, char *argv[]) {
   FILE *fileImgPtr;
   int runLoop = 1;
-  // Array of current directory entries. Each entry represented as char*.
-  Directory currentDir;
-  // Initialize the array of entries.
-  currentDir.dirEntries = (unsigned char **) malloc(0 * sizeof(unsigned char *));
-  currentDir.size = 0;
 
   // Check for correct number of arguments.
   if(argc != 2) {
@@ -32,24 +27,9 @@ int main(int argc, char *argv[]) {
 
   // Read and store the boot sector data.
   readBootSector(fileImgPtr);
-
-  /*
-  for (int i = 0; i < 16; ++i)
-    printf("Boot Sector Data %d: %d\n", i, fsMetadata[i]);
-    */
-
-  // Read and store the root directory.
-  getDirEntries(fileImgPtr, fsMetadata[ROOT_CLUSTER], &currentDir);
-
-  // Testing: print contents of root directory.
-  /*for(int i = 0; i < currentDir.size; ++i) {
-    for(int j = 0; j < 32; ++j) {
-      printf("%c ", currentDir.dirEntries[i][j]);
-    }
-    printf("\n");
-  }
-  printf("\n");
-  */
+  unsigned int currentDirCluster;
+  // Set current directory to the root directory.
+  currentDirCluster = fsMetadata[ROOT_CLUSTER];
 
   printf("Please input a command. Type 'quit' to quit program.\n");
   //Loop to perform commands until user exits.
@@ -59,6 +39,26 @@ int main(int argc, char *argv[]) {
     char **cmds = (char **)malloc(6*sizeof(char*));
     for (int itr = 0; itr < 6; itr++)
       cmds[itr]=(char*)malloc(1*sizeof(char));
+
+    /***Initialize current directory data***/
+    // Array of current directory entries. Each entry represented as char*.
+    Directory currentDir;
+    currentDir.dirEntries = (unsigned char **) malloc(0 * sizeof(unsigned char *));
+    currentDir.size = 0;
+
+    // Read and store the current directory.
+    getDirEntries(fileImgPtr, currentDirCluster, &currentDir);
+
+    // Testing: print contents of current directory.
+    /*
+    for(int i = 0; i < currentDir.size; ++i) {
+      for(int j = 0; j < 32; ++j) {
+        printf("%c ", currentDir.dirEntries[i][j]);
+      }
+      printf("\n");
+    }
+    printf("\n");
+    */
 
     // Print prompt and get user input.
     printPrompt();
@@ -93,17 +93,18 @@ int main(int argc, char *argv[]) {
     for (int itr = 0; itr < 6; itr++)
       free(cmds[itr]);
     free(cmds);
+
+    // Free the dynamically allocated current directory.
+    for(int i = 0; i < currentDir.size; ++i)
+      free(currentDir.dirEntries[i]);
+    free(currentDir.dirEntries);
   }
 
   //Close the file image.
   fclose(fileImgPtr);
   printf("Exiting program...\n");
 
-  // Free the dynamically allocated current directory.
-  for(int i = 0; i < currentDir.size; ++i)
-    free(currentDir.dirEntries[i]);
 
-  free(currentDir.dirEntries);
 
   return 0;
 }
