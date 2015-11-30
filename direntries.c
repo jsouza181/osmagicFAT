@@ -50,7 +50,6 @@ unsigned int getFirstCluster(unsigned char *dirEntry) {
   highWord = highWord << 16;
   highWord = highWord | lowWord;
 
-  printf("result is: %d\n", highWord);
   // If the resulting cluster number is zero, return the root directory.
   if(highWord == 0)
     return fsMetadata[ROOT_CLUSTER];
@@ -60,13 +59,11 @@ unsigned int getFirstCluster(unsigned char *dirEntry) {
 
 // Given a filename, find it in the current directory.
 // If it is not in the current directory, return 0.
-// Otherwise, return the file/dir's first cluster number.
+// Otherwise, set the file/dir's first cluster number.
 int findFilenameCluster(Directory currentDir, char *filename,
-                        unsigned int *clusterNum) {
+                        unsigned int *clusterNum, int *indexPtr) {
   // Temp filename built from each directory entry.
   char tempString[13];
-  // Capitalize the user-given filename for strcmp().
-  capFilename(filename);
 
   // Look through each directory entry of the current directory.
   for(int i = 0; i < currentDir.size; ++i) {
@@ -74,12 +71,8 @@ int findFilenameCluster(Directory currentDir, char *filename,
 
     // Match is found.
     if(strcmp(tempString, filename) == 0) {
-      // Check if the provided name is a directory.
-      if(!isDirectory(currentDir.dirEntries[i])){
-        printf("%s is not a directory.\n", filename);
-        return 0;
-      }
       *clusterNum = getFirstCluster(currentDir.dirEntries[i]);
+      *indexPtr = i;
       return 1;
     }
   }

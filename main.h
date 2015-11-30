@@ -3,7 +3,7 @@
 
 
 void printPrompt();
-void tokenize(char* input, char** cmds);
+int tokenize(char* input, char** cmds);
 
 
 #endif

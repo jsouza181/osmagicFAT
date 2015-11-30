@@ -155,7 +155,7 @@ void getDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir)
 
       // Allocate space for the new entry.
       dir->dirEntries = (unsigned char **) realloc(dir->dirEntries,
-                        (dir->size + 1) * sizeof(char*));
+                        (dir->size + 1) * sizeof(unsigned char*));
       // Allocate space for each character in the entry.
       dir->dirEntries[dir->size] = (unsigned char*) malloc(32 * sizeof(unsigned char));
 
@@ -172,6 +172,6 @@ void getDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir)
     // If next cluster not EOC, set current cluster to next cluster in chain.
     currentCluster = getNextCluster(fileImgPtr, currentCluster);
     //printf("current cluster is now: %02x\n", currentCluster);
-  } while(currentCluster != EOC);
+  } while(currentCluster < EOCMIN);
 
 }

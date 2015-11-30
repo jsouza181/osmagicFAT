@@ -7,8 +7,9 @@
 
 #include "utilities.h" // Directory struct
 
-void open(Directory dir, char *filename, int flag);
 void ls(Directory dir);
 int cd(Directory currentDir, char *targetDir, unsigned int *clusterNum);
+int open(Directory currentDir, FILE *fileImgPtr, OpenFileTable *ofTable,
+          char *targetFile, int flag);
 
 #endif

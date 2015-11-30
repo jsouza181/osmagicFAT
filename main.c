@@ -30,19 +30,25 @@ int main(int argc, char *argv[]) {
   unsigned int currentDirCluster;
   // Set current directory to the root directory.
   currentDirCluster = fsMetadata[ROOT_CLUSTER];
+  Directory currentDir;
+
+  // Initialize open file table.
+  OpenFileTable ofTable;
+  ofTable.entries = (OpenFileEntry*) malloc(0 * sizeof(OpenFileEntry));
+  ofTable.size = 0;
 
   printf("Please input a command. Type 'quit' to quit program.\n");
   //Loop to perform commands until user exits.
   while(runLoop){
     // Allocate memory to hold commands.
     char input[256];
+    // Save the number of tokens(arguments) in each input.
+    int tokCount = 0;
     char **cmds = (char **)malloc(6*sizeof(char*));
     for (int itr = 0; itr < 6; itr++)
       cmds[itr]=(char*)malloc(1*sizeof(char));
 
-    /***Initialize current directory data***/
-    // Array of current directory entries. Each entry represented as char*.
-    Directory currentDir;
+    // Initialize current directory data
     currentDir.dirEntries = (unsigned char **) malloc(0 * sizeof(unsigned char *));
     currentDir.size = 0;
 
@@ -61,32 +67,78 @@ int main(int argc, char *argv[]) {
     */
 
     // Print prompt and get user input.
-    printf("Current cluster: %d\n", currentDirCluster);
+    for(int i = 0; i < ofTable.size; ++i) {
+      printf("Open file %d: %s, flag %d, clusCount %d, \n",
+            i, ofTable.entries[i].filename,
+            ofTable.entries[i].flag, ofTable.entries[i].clusterCount);
+      printf("Cluster's are: ");
+
+      for(int j = 0; j < ofTable.entries[i].clusterCount; ++j)
+        printf("%d ", ofTable.entries[i].clusterOffsets[j]);
+      printf("\n");
+
+    }
     printPrompt();
     if (fgets(input, 256, stdin) == NULL){
       printf("Error! Invalid input!\n");
       exit(-1);
     }
-    tokenize(input,cmds);
+    tokCount = tokenize(input,cmds);
 
     // Compare first argument to perform command.
     if (strcmp(cmds[0], "quit") == 0){
       runLoop = 0;
     }
-    else if (strcmp(cmds[0], "open") == 0){}
+
+    else if (strcmp(cmds[0], "open") == 0) {
+      if(tokCount != 3) {
+        printf("Error: Invalid arguments.\n");
+        printf("Expected: open <file> <flag>\n");
+      }
+      else {
+        // Convert flag input string to int.
+        int flag;
+        if(strcmp(cmds[2], "r") == 0)
+          flag = READ;
+        else if(strcmp(cmds[2], "w") == 0)
+          flag = WRITE;
+        else if(strcmp(cmds[2], "rw") == 0)
+          flag = READWRITE;
+        else if(strcmp(cmds[2], "wr") == 0)
+          flag = READWRITE;
+        else {
+          printf("Error: Invalid flag.\n");
+          continue;
+        }
+
+        if(open(currentDir, fileImgPtr, &ofTable, cmds[1], flag))
+          printf("success!\n");
+        else
+          printf("failure\n");
+      }
+    }
+
     else if (strcmp(cmds[0], "close") == 0){}
     else if (strcmp(cmds[0], "create") == 0){}
     else if (strcmp(cmds[0], "rm") == 0){}
     else if (strcmp(cmds[0], "size") == 0){}
+
     else if (strcmp(cmds[0], "cd") == 0) {
-/***Check for number of arguments***/
-/***Check for directory name size***/
-      unsigned int newClusterNum = 0;
-      unsigned int *newClusterPtr = &newClusterNum;
-      if(cd(currentDir, cmds[1], newClusterPtr)) {
-        currentDirCluster = *newClusterPtr;
+      if(tokCount != 2) {
+        printf("Error: Invalid arguments.\n");
+        printf("Expected: cd <directory>\n");
+      }
+      else {
+        // Find the cluster number of the desired directory and set the current
+        // directory to that cluster.
+        unsigned int newClusterNum = 0;
+        unsigned int *newClusterPtr = &newClusterNum;
+        if(cd(currentDir, cmds[1], newClusterPtr)) {
+          currentDirCluster = *newClusterPtr;
+        }
       }
     }
+
     else if (strcmp(cmds[0], "ls") == 0) {
       ls(currentDir);
     }
@@ -98,22 +150,30 @@ int main(int argc, char *argv[]) {
       printf("Invalid command. Please try again.\n");
     }
 
-    //Free dynamically-allocated memory.
+    // Free dynamically-allocated memory.
     for (int itr = 0; itr < 6; itr++)
       free(cmds[itr]);
     free(cmds);
 
     // Free the dynamically allocated current directory.
-    for(int i = 0; i < currentDir.size; ++i)
+    for(int i = 0; i < currentDir.size; ++i) {
       free(currentDir.dirEntries[i]);
+    }
     free(currentDir.dirEntries);
+
   }
 
   //Close the file image.
   fclose(fileImgPtr);
   printf("Exiting program...\n");
 
-
+  // Free the dynamically allocated open file table.
+  // Free the cluster chains.
+  for(int i = 0; i < ofTable.size; ++i) {
+    free(ofTable.entries[i].clusterOffsets);
+  }
+  // Free the table.
+  free(ofTable.entries);
 
   return 0;
 }
@@ -126,11 +186,13 @@ void printPrompt(){
   fflush(stdout);
 }
 
-// Tokenize string from input.
-void tokenize(char* input, char** cmds){
+// Tokenize string from input. Returns the number of tokens.
+int tokenize(char* input, char** cmds){
   int a = 0;
+  int tokCount = 0;
   char* token = strtok(input," \n");
-  while (token){
+  while (token) {
+    tokCount = tokCount + 1;
     strcpy(cmds[(a)++], token);
     token = strtok(NULL," \n");
     // Break if too many arguments.
@@ -138,4 +200,6 @@ void tokenize(char* input, char** cmds){
       break;
   }
   cmds[a] = NULL;
+
+  return tokCount;
 }
