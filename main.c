@@ -119,8 +119,19 @@ int main(int argc, char *argv[]) {
     }
 
     else if (strcmp(cmds[0], "close") == 0){}
-    else if (strcmp(cmds[0], "create") == 0){}
-    else if (strcmp(cmds[0], "rm") == 0){}
+    else if (strcmp(cmds[0], "create") == 0){
+      if (tokCount != 2) {
+        printf("Error: Invalid arguments.\n");
+        printf("Expected: create <filename>.\n");
+      } // if
+      else {
+        create(currentDir, cmds[1], 0);
+      }
+    } // create
+    else if (strcmp(cmds[0], "rm") == 0){
+      printf("Error: Invalid arguments.\n");
+      printf("Expected: create <filename>.\n");
+    }
     else if (strcmp(cmds[0], "size") == 0){}
 
     else if (strcmp(cmds[0], "cd") == 0) {
@@ -142,8 +153,16 @@ int main(int argc, char *argv[]) {
     else if (strcmp(cmds[0], "ls") == 0) {
       ls(currentDir);
     }
-    else if (strcmp(cmds[0], "mkdir") == 0){}
-    else if (strcmp(cmds[0], "rmdir") == 0){}
+    else if (strcmp(cmds[0], "mkdir") == 0){
+      if (tokCount != 2) {
+        printf("Error: Invalid arguments.\n");
+        printf("Expected: create <dirname>.\n");
+      }
+    }
+    else if (strcmp(cmds[0], "rmdir") == 0){
+      printf("Error: Invalid arguments.\n");
+      printf("Expected: create <dirname>.\n");
+    }
     else if (strcmp(cmds[0], "read") == 0){}
     else if (strcmp(cmds[0], "write") == 0){}
     else {
