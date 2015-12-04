@@ -132,3 +132,39 @@ int open(Directory currentDir, FILE *fileImgPtr, OpenFileTable *ofTable,
 
 //How much space is left in cluster to write?
 //Mod file size with number of 512 bytes
+
+// creates a directory or a file depending on the isDir flag: 0 is for file, > 0 is for directory
+int create(Directory currentDir, char* filename, int isDir) {
+  // File's first cluster (used to build and then store cluster chain).
+  unsigned int firstCluster = 0;
+  unsigned int *firstClusterPtr = &firstCluster;
+  // Index of the found file in the directory entry table.
+  // Used to access the file's dir entry.
+  int fileIndex = 0;
+  int *indexPtr = &fileIndex;
+
+  if (filename != NULL) {
+    capFilename(filename);
+
+    // check if filename exists in current directory
+    if(findFilenameCluster(currentDir, filename, firstClusterPtr, indexPtr)) {
+      printf("Error: a file or directory with that name already exists\n");
+      return 0;
+    }
+    else {
+      if (isDir) {
+        printf("Creating directory as %s\n", filename);
+        return 1;
+      } // if
+      else {
+        printf("Creating file as %s\n", filename);
+        // create a new entry in the next available cluster
+        
+        return 1;
+      } // else
+    } // else
+  } // if
+  else {
+    return 0;
+  }
+} // create
