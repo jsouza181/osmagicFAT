@@ -7,46 +7,49 @@
 #include "metadata.h"
 #include "utilities.h"
 
-int main(int argc, char *argv[]) {
+int main (int argc, char *argv[]) {
   FILE *fileImgPtr;
+  Directory currentDir;
+  OpenFileTable ofTable;
+  unsigned int currentDirCluster;
+  int flag = -1;
   int runLoop = 1;
+  // int i = 0, j = 0;
 
   // Check for correct number of arguments.
-  if(argc != 2) {
+  if (argc != 2) {
     printf("Error: Incorrect number of arguments.\n");
     printf("Expected: osmagicFAT <file image>\n");
     return 1;
   }
 
   // Open the file image.
-  fileImgPtr = fopen(argv[1], "rb");
-    if(fileImgPtr == NULL) {
+  fileImgPtr = fopen(argv[1], "rb+");
+    if (fileImgPtr == NULL) {
       printf("Error: could not open file image\n.");
       return 1;
     }
 
   // Read and store the boot sector data.
   readBootSector(fileImgPtr);
-  unsigned int currentDirCluster;
+
   // Set current directory to the root directory.
   currentDirCluster = fsMetadata[ROOT_CLUSTER];
-  Directory currentDir;
 
   // Initialize open file table.
-  OpenFileTable ofTable;
   ofTable.entries = (OpenFileEntry*) malloc(0 * sizeof(OpenFileEntry));
   ofTable.size = 0;
 
   printf("Please input a command. Type 'quit' to quit program.\n");
   //Loop to perform commands until user exits.
-  while(runLoop){
+  while(runLoop) {
     // Allocate memory to hold commands.
     char input[256];
     // Save the number of tokens(arguments) in each input.
     int tokCount = 0;
-    char **cmds = (char **)malloc(6*sizeof(char*));
+    char **cmds = (char**) malloc(6*sizeof(char*));
     for (int itr = 0; itr < 6; itr++)
-      cmds[itr]=(char*)malloc(1*sizeof(char));
+      cmds[itr]=(char*) malloc(1*sizeof(char));
 
     // Initialize current directory data
     currentDir.dirEntries = (unsigned char **) malloc(0 * sizeof(unsigned char *));
@@ -56,24 +59,23 @@ int main(int argc, char *argv[]) {
     getDirEntries(fileImgPtr, currentDirCluster, &currentDir);
 
     // Testing: print contents of current directory.
-    /*
-    for(int i = 0; i < currentDir.size; ++i) {
-      for(int j = 0; j < 32; ++j) {
-        printf("%c ", currentDir.dirEntries[i][j]);
-      }
-      printf("\n");
-    }
-    printf("\n");
-    */
+    // i and j are declared on the top. Remember to uncomment
+    // for(i = 0; i < currentDir.size; ++i) {
+    //   for(j = 0; j < 32; ++j) {
+    //     printf("%c ", currentDir.dirEntries[i][j]);
+    //   }
+    //   printf("\n");
+    // }
+    // printf("\n");
 
     // Print prompt and get user input.
-    for(int i = 0; i < ofTable.size; ++i) {
+    for (int i = 0; i < ofTable.size; ++i) {
       printf("Open file %d: %s, flag %d, clusCount %d, \n",
             i, ofTable.entries[i].filename,
             ofTable.entries[i].flag, ofTable.entries[i].clusterCount);
       printf("Cluster's are: ");
 
-      for(int j = 0; j < ofTable.entries[i].clusterCount; ++j)
+      for (int j = 0; j < ofTable.entries[i].clusterCount; ++j)
         printf("%d ", ofTable.entries[i].clusterOffsets[j]);
       printf("\n");
 
@@ -91,13 +93,12 @@ int main(int argc, char *argv[]) {
     }
 
     else if (strcmp(cmds[0], "open") == 0) {
-      if(tokCount != 3) {
+      if (tokCount != 3) {
         printf("Error: Invalid arguments.\n");
         printf("Expected: open <file> <flag>\n");
       }
       else {
         // Convert flag input string to int.
-        int flag;
         if(strcmp(cmds[2], "r") == 0)
           flag = READ;
         else if(strcmp(cmds[2], "w") == 0)
@@ -116,23 +117,43 @@ int main(int argc, char *argv[]) {
         else
           printf("failure\n");
       }
-    }
+    } // open
 
-    else if (strcmp(cmds[0], "close") == 0){}
-    else if (strcmp(cmds[0], "create") == 0){
+    else if (strcmp(cmds[0], "close") == 0) {
+
+    } // close
+
+    else if (strcmp(cmds[0], "create") == 0) {
       if (tokCount != 2) {
         printf("Error: Invalid arguments.\n");
         printf("Expected: create <filename>.\n");
       } // if
+      else if (strcmp(cmds[1], ".") == 0
+          || strcmp(cmds[1], "..") == 0) {
+        printf("Error: Invalid arguments.\n");
+        printf("\'%s\' is not a valid name\n", cmds[1]);
+      }
       else {
         create(currentDir, cmds[1], 0);
       }
     } // create
-    else if (strcmp(cmds[0], "rm") == 0){
-      printf("Error: Invalid arguments.\n");
-      printf("Expected: create <filename>.\n");
-    }
-    else if (strcmp(cmds[0], "size") == 0){}
+
+    else if (strcmp(cmds[0], "rm") == 0) {
+      if (tokCount != 2) {
+        printf("Error: Invalid arguments.\n");
+        printf("Expected: create <dirname>.\n");
+      }
+      // using . or .. is not allowed
+      else if (strcmp(cmds[1], ".") == 0
+          || strcmp(cmds[1], "..") == 0) {
+        printf("Error: Invalid arguments.\n");
+        printf("\'%s\' is not a valid name\n", cmds[1]);
+      }
+    } // rm
+
+    else if (strcmp(cmds[0], "size") == 0) {
+
+    } // size
 
     else if (strcmp(cmds[0], "cd") == 0) {
       if(tokCount != 2) {
@@ -148,26 +169,46 @@ int main(int argc, char *argv[]) {
           currentDirCluster = *newClusterPtr;
         }
       }
-    }
+    } // cd
 
     else if (strcmp(cmds[0], "ls") == 0) {
       ls(currentDir);
-    }
-    else if (strcmp(cmds[0], "mkdir") == 0){
+    } // ls
+
+    else if (strcmp(cmds[0], "mkdir") == 0) {
       if (tokCount != 2) {
         printf("Error: Invalid arguments.\n");
         printf("Expected: create <dirname>.\n");
       }
-    }
-    else if (strcmp(cmds[0], "rmdir") == 0){
-      printf("Error: Invalid arguments.\n");
-      printf("Expected: create <dirname>.\n");
-    }
-    else if (strcmp(cmds[0], "read") == 0){}
-    else if (strcmp(cmds[0], "write") == 0){}
+      else if (strcmp(cmds[1], ".") == 0
+          || strcmp(cmds[1], "..") == 0) {
+        printf("Error: Invalid arguments.\n");
+        printf("\'%s\' is not a valid name\n", cmds[1]);
+      }
+    } // mkdir
+
+    else if (strcmp(cmds[0], "rmdir") == 0) {
+      if (tokCount != 2) {
+        printf("Error: Invalid arguments.\n");
+        printf("Expected: create <dirname>.\n");
+      }
+      else if (strcmp(cmds[1], ".") == 0
+          || strcmp(cmds[1], "..") == 0) {
+        printf("Error: Invalid arguments.\n");
+        printf("\'%s\' is not a valid name\n", cmds[1]);
+      }
+    } // rmdir
+    else if (strcmp(cmds[0], "read") == 0) {
+
+    } // read
+
+    else if (strcmp(cmds[0], "write") == 0) {
+
+    } // write
+
     else {
       printf("Invalid command. Please try again.\n");
-    }
+    } // invalid
 
     // Free dynamically-allocated memory.
     for (int itr = 0; itr < 6; itr++)
@@ -175,12 +216,12 @@ int main(int argc, char *argv[]) {
     free(cmds);
 
     // Free the dynamically allocated current directory.
-    for(int i = 0; i < currentDir.size; ++i) {
+    for (int i = 0; i < currentDir.size; ++i) {
       free(currentDir.dirEntries[i]);
     }
     free(currentDir.dirEntries);
 
-  }
+  } // while input
 
   //Close the file image.
   fclose(fileImgPtr);
@@ -188,7 +229,7 @@ int main(int argc, char *argv[]) {
 
   // Free the dynamically allocated open file table.
   // Free the cluster chains.
-  for(int i = 0; i < ofTable.size; ++i) {
+  for (int i = 0; i < ofTable.size; ++i) {
     free(ofTable.entries[i].clusterOffsets);
   }
   // Free the table.
@@ -217,7 +258,7 @@ int tokenize(char* input, char** cmds){
     // Break if too many arguments.
     if (a == 5)
       break;
-  }
+  } // while
   cmds[a] = NULL;
 
   return tokCount;

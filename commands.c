@@ -158,6 +158,8 @@ int create(Directory currentDir, char* filename, int isDir) {
       } // if
       else {
         printf("Creating file as %s\n", filename);
+        // create a new entry in the next available cluster
+        
         return 1;
       } // else
     } // else
@@ -165,4 +167,4 @@ int create(Directory currentDir, char* filename, int isDir) {
   else {
     return 0;
   }
-}
+} // create
