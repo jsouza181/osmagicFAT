@@ -172,8 +172,35 @@ int main (int argc, char *argv[]) {
     } // cd
 
     else if (strcmp(cmds[0], "ls") == 0) {
-      ls(currentDir);
-    } // ls
+      //If only 1 argument, lists the current directory
+      if(cmds[1] == NULL)
+      	ls(currentDir);
+      else {
+    	  unsigned int newDirCluster;
+    	  //newDir will be populated with entries from the specified directory
+    	  Directory newDir;
+
+    	  newDir.dirEntries = (unsigned char **) malloc(0 * sizeof(unsigned char *));
+    	  newDir.size = 0;
+    	  unsigned int newClusterNum = 0;
+    	  unsigned int *newClusterPtr = &newClusterNum;
+
+    	  //Checks if specified directory exists
+    	  if(cd(currentDir, cmds[1], newClusterPtr))
+    	    {
+    	      newDirCluster = *newClusterPtr;
+    	      getDirEntries(fileImgPtr, newDirCluster, &newDir);
+    	      ls(newDir);
+    	    }
+
+    	  // Free the dynamically allocated new directory.
+    	  for(int i = 0; i < newDir.size; ++i)
+    	    {
+    	      free(newDir.dirEntries[i]);
+    	    }
+    	  free(newDir.dirEntries);
+	}
+    }
 
     else if (strcmp(cmds[0], "mkdir") == 0) {
       if (tokCount != 2) {
