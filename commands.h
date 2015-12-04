@@ -18,4 +18,7 @@ int open(Directory currentDir, FILE *fileImgPtr, OpenFileTable *ofTable,
 // if the filename is already in use, unable to create it (out of mem), returns 0
 int create(Directory currentDir, char* filename, int isDir);
 
+int rm(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
+        OpenFileTable *ofTable, char *targetFile, int flag);
+
 #endif

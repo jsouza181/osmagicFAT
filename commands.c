@@ -159,7 +159,7 @@ int create(Directory currentDir, char* filename, int isDir) {
       else {
         printf("Creating file as %s\n", filename);
         // create a new entry in the next available cluster
-        
+
         return 1;
       } // else
     } // else
@@ -168,3 +168,65 @@ int create(Directory currentDir, char* filename, int isDir) {
     return 0;
   }
 } // create
+
+
+int rm(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
+        OpenFileTable *ofTable, char *targetFile, int flag){
+
+  unsigned int firstCluster = 0;
+  unsigned int *firstClusterPtr = &firstCluster;
+
+  int fileIndex = 0;
+  int *indexPtr = &fileIndex;
+  capFilename(targetFile);
+
+  for(int i =0; i < ofTable->size; ++i){
+    if(strcmp(ofTable->entries[i].filename, targetFile) == 0)
+      printf("Error. The file is currently open.\n");
+      return 0;
+  }
+
+  if(findFilenameCluster(currentDir,targetFile, firstClusterPtr, indexPtr)){
+    if (isDirectory(currentDir.dirEntries[*indexPtr])){
+      printf("%s is a directory.\n", targetFile);
+      return 0;
+    }
+
+    OpenFileEntry fileEntry;
+    fileEntry.flag = flag;
+    fileEntry.clusterOffsets = (unsigned int*) malloc(0 * sizeof(unsigned int));
+    fileEntry.clusterCount = 0;
+
+    unsigned int nextCluster = firstCluster;
+    while (nextCluster < EOCMIN){
+      fileEntry.clusterOffsets = (unsigned int*) realloc(fileEntry.clusterOffsets,
+          (fileEntry.clusterCount + 1) * sizeof(unsigned int));
+
+      // Set the cluster number.
+      fileEntry.clusterOffsets[fileEntry.clusterCount] = nextCluster;
+
+      // Increment the cluster count.
+      fileEntry.clusterCount =  fileEntry.clusterCount + 1;
+
+      // Find the next cluster associated with the entry.
+      nextCluster = getNextCluster(fileImgPtr, nextCluster);
+    }
+
+    // Reverse through Cluster to zero out bytes
+    for(int i = fileEntry.clusterCount; i > -1; --i){
+      int clusterNum = fileEntry.clusterOffsets[i];
+      freeCluster(fileImgPtr,clusterNum);
+    }
+
+    // Remove file from Directory entry
+    rmDirEntries(fileImgPtr, currentDirCluster, &currentDir, targetFile);
+
+    return 1;
+  }
+
+  else{
+    printf("File not found.\n");
+    return 0;
+  }
+
+}

@@ -149,6 +149,13 @@ int main (int argc, char *argv[]) {
         printf("Error: Invalid arguments.\n");
         printf("\'%s\' is not a valid name\n", cmds[1]);
       }
+      else {
+        // It zeros out the data, however fsck shows an orphaned long name and
+        // the cluster number
+        int flag = 0;
+        if(rm(currentDir, currentDirCluster, fileImgPtr, &ofTable, cmds[1], flag))
+          printf("File has been removed.\n");
+      }
     } // rm
 
     else if (strcmp(cmds[0], "size") == 0) {
