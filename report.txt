@@ -1,0 +1,69 @@
+FAT32 image utility report
+============================
+
+Problem statement:
+============================
+The purpose of this project is to familiarize you with three concepts: basic file-system design and
+implementation, file-system image testing, and data serialization/de-serialization. You will need to
+understand various aspects of the FAT32 file system such as cluster-based storage, FAT tables, sectors,
+directory structure, and byte-ordering (endianness). You will also be introduced to mounting and unmounting
+of file system images onto a running Linux system, data serialization (converting data structures
+into raw bytes for storage or network transmissions), and de-serialization (converting serialized bytes into
+data structures again).
+
+Steps taken to solve problem
+============================
+1. Opened and studied fat32 image provided with a hex editor
+2. Implemented bootsector parsing functions
+3. Implemented user input parsing
+4. Created utilities for code reusability
+5. Implemented commands to be executed
+
+Assumptions
+============================
+- File and directory names will not contain spaces.
+- You may assume that STRING always begins and ends with QUOTES
+- FILE_NAME and DIR_NAME will only contain the names, not multi-level paths. For example,
+"create afile" will create a file named afile in the current directory. It does not have to support
+commands like "create adirectory/afile"
+- Unless specified, you may choose any reasonable data type for the arguments and return values
+for your functions
+
+Known Bugs
+============================
+- Program segfaults when only "enter" is the user input
+- Program can take from ~10-60 seconds to correctly reflect changes made to the file system when a file is modified/added/removed while the program is running
+
+Division of Labor
+============================
+Jason Souza - utilities, boot metadata parsing and collection, and codebase
+Ricardo Castilla - create, mkdir
+Philip Scott - rm, rmdir
+Conor Stephens - size, ls
+
+Slack Days Used
+============================
+Jason Souza - 1
+Ricardo Castilla - 1
+Philip Scott - 1
+Conor Stephens - 1
+
+Log
+============================
+- 12/4 - Project completed
+
+- 12/3 - Bug fixing and cleanup
+
+- 12/1 - Group meeting. Bug fixing, and code coupling
+
+- 11/29 - Testing. Bug-digging and report created
+
+- 11/15 - Created most structs needed
+
+- 11/7 - All boot metadata being stored
+
+- 11/6 - Grabbed some of the boot metadata
+
+- 11/5 - Looked at fat image with hex editor
+
+- 10/30 - Project assigned
