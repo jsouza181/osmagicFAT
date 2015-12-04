@@ -199,7 +199,7 @@ int main (int argc, char *argv[]) {
     	      free(newDir.dirEntries[i]);
     	    }
     	  free(newDir.dirEntries);
-	}
+    	}
     }
 
     else if (strcmp(cmds[0], "mkdir") == 0) {
