@@ -7,53 +7,37 @@
 * Conor Stephens
 
 ### Purpose ###
-* Learn how to create a kernel module
-* Learn how to compile a custom kernel
+* Learn how to read, and manage a small fat32 image
 * Version: 1.0
 
 ### Tar file contents ###
 
--> elevator/
+-> osmagicFAT/
 
     -> README.txt
     -> README.md
     -> report.txt
 
-    -> divers/
-        -> consumer.c
-        -> consumer.x
-        -> elevator_calls.c
-        -> elevator_calls.h
-        -> Makefile
-        -> producer.c
-        -> producer.h
+    -> metadata.h
+    -> metadata.c
 
-    -> include/
-        -> elevator.h
-        -> elevatorproc.h
-        -> scheduler.h
-        -> syscalls.h
+    -> main.h
+    -> main.c
 
-    -> src/
-        -> elevator.c
-        -> elevatorproc.c
-        -> module.c
-        -> scheduler.c
-        -> sys_issue_request.c
-        -> sys_start_elevator.c
-        -> sys_stop_elevator.c
-        -> syscalls.c
+    -> utilities.h
+    -> utilities.c
 
-    -> part1/
-        -> main.c
-        -> Makefile
+    -> direntries.h
+    -> direntries.c
 
-    -> part2/
-        -> Makefile
-        -> my_xtime.c
+    -> commands.h
+    -> commands.c
+
+    -> runCheck.bash
+
+    -> fsck.fat # program to check integrity of fat32 filesystem. Compiled on linux
 
     -> Makefile
-    -> proc_view.sh
 
 ### Compiling ###
 * Use provided makefile to compile the source code
@@ -66,39 +50,12 @@ $> make
 $> make clean
 ```
 
-### Using the elevator ###
-* In order to start the elevator, run
+* Check fat32 image for corruption
 ```
-$> make teststart
+$> ./runCheck.bash <imagefile>
 ```
-* To create a request
-```
-$> make testadd
-```
-* To create 10 requests run
-```
-$> make testadd10
-```
-* To crate hundreds of requests, it is possible to call the following in a script
-```
-$> make testadd10 &
-```
-* To automate the start, add, and stop of one request (also removes the module)
-```
-$> make test
-```
-* To stop and remove the elevator module
-```
-$> make teststop
-```
-* To start, or stop the elevator without inserting or removing the module, you may use
-```
-$> ./drivers/consumer.x --start
-$> ./drivers/consumer.x --stop
-```
-respectively
+note: make sure fsck.fat is in the same directory as runCheck.bash 
 
 ### Known Bugs ###
-
-- Fraction values do not update correctly, which causes the elevator to accept more weight, and units than allowed (rarely)
-- When elevator is stopped, all passengers waiting on a floor are deallocated. This might not be a wanted 'feature'
+- Program segfaults when only "enter" is the user input
+- Program can take from ~10-60 seconds to correctly reflect changes made to the file system when a file is modified/added/removed while the program is running
