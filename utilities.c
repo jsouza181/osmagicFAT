@@ -262,5 +262,5 @@ void rmDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir,
           // If next cluster not EOC, set current cluster to next cluster in chain.
           currentCluster = getNextCluster(fileImgPtr, currentCluster);
 
-  } while(currentCluster < EOCMIN);s
+  } while(currentCluster < EOCMIN);
 }

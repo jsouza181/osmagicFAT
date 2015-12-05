@@ -167,11 +167,12 @@ int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPt
       for (size_t i = 0; i < 32; ++i) {
         newEntry[i] = 0x00;
       }
+      setShortName(newEntry, filename);
       // set the name of the entry
-      for (size_t i = 0; i < sizeof(filename) && i < MAX_FILENAME_SIZE; ++i) {
-        printf("i: %d\nfilename[i]: %c\n", (int)i, filename[i]);
-        newEntry[i] = filename[i];
-      } // for
+      // - 3 for the extensions
+      // for (size_t i = 0; i < sizeof(filename) && i < MAX_FILENAME_SIZE - 3; ++i) {
+      //   newEntry[i] = filename[i];
+      // } // for
 
       if (isDir) {
         printf("Creating directory as %s\n", filename);
