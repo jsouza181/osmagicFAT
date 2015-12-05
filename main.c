@@ -37,7 +37,7 @@ int main (int argc, char *argv[]) {
   currentDirCluster = fsMetadata[ROOT_CLUSTER];
 
   // Initialize open file table.
-  ofTable.entries = (OpenFileEntry*) malloc(0 * sizeof(OpenFileEntry));
+  ofTable.entries = (OpenFileEntry*) malloc(sizeof(OpenFileEntry));
   ofTable.size = 0;
 
   printf("Please input a command. Type 'quit' to quit program.\n");
@@ -52,7 +52,7 @@ int main (int argc, char *argv[]) {
       cmds[itr]=(char*) malloc(1*sizeof(char));
 
     // Initialize current directory data
-    currentDir.dirEntries = (unsigned char **) malloc(0 * sizeof(unsigned char *));
+    currentDir.dirEntries = (unsigned char **) malloc(sizeof(unsigned char *));
     currentDir.size = 0;
 
     // Read and store the current directory.
@@ -134,7 +134,7 @@ int main (int argc, char *argv[]) {
         printf("\'%s\' is not a valid name\n", cmds[1]);
       }
       else {
-        create(currentDir, cmds[1], 0);
+        create(currentDir, currentDirCluster, fileImgPtr, cmds[1], 0);
       }
     } // create
 
@@ -187,7 +187,7 @@ int main (int argc, char *argv[]) {
     	  //newDir will be populated with entries from the specified directory
     	  Directory newDir;
 
-    	  newDir.dirEntries = (unsigned char **) malloc(0 * sizeof(unsigned char *));
+    	  newDir.dirEntries = (unsigned char **) malloc(sizeof(unsigned char *));
     	  newDir.size = 0;
     	  unsigned int newClusterNum = 0;
     	  unsigned int *newClusterPtr = &newClusterNum;
@@ -218,6 +218,9 @@ int main (int argc, char *argv[]) {
           || strcmp(cmds[1], "..") == 0) {
         printf("Error: Invalid arguments.\n");
         printf("\'%s\' is not a valid name\n", cmds[1]);
+      }
+      else {
+        create(currentDir, currentDirCluster, fileImgPtr, cmds[1], 1);
       }
     } // mkdir
 
