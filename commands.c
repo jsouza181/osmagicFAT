@@ -162,15 +162,16 @@ int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPt
       return 0;
     }
     else {
-      newEntry = (unsigned char*) malloc(sizeof(unsigned char *));
+      newEntry = (unsigned char*) malloc(0 * sizeof(unsigned char *));
+      // lets set all bytes to 0 first
+      for (size_t i = 0; i < 32; ++i) {
+        newEntry[i] = 0x00;
+      }
       // set the name of the entry
       for (size_t i = 0; i < sizeof(filename) && i < MAX_FILENAME_SIZE; ++i) {
+        printf("i: %d\nfilename[i]: %c\n", (int)i, filename[i]);
         newEntry[i] = filename[i];
       } // for
-      // set fileSize to 0
-      for (size_t i = 0; i < 4; ++i) {
-        newEntry[28+i] = 0x00;
-      }
 
       if (isDir) {
         printf("Creating directory as %s\n", filename);
@@ -179,7 +180,7 @@ int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPt
       else {
         printf("Creating file as %s\n", filename);
         // create a new entry in the next available cluster
-        newEntry[11] = 0x00; // set all bits to 0 except directory bit
+        newEntry[11] = 0x00;
       } // else
       // check if cluster has enough space
       if (totalEntries % entriesPerCluster == 0 && totalEntries != 0) {
@@ -358,13 +359,5 @@ int rmDirectory(Directory currentDir, unsigned int currentDirCluster, FILE *file
     printf("File not found.\n");
     return 0;
   }
-
-
-
-
-
-
-
-
 
 }
