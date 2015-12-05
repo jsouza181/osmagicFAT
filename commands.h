@@ -21,4 +21,7 @@ int create(Directory currentDir, char* filename, int isDir);
 int rm(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
         OpenFileTable *ofTable, char *targetFile, int flag);
 
+int rmDirectory(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
+        OpenFileTable *ofTable, char *targetFile, int flag);
+
 #endif
