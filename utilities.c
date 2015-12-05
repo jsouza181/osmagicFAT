@@ -211,20 +211,19 @@ void rmDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir,
   int j, found = 0;
   fpos_t pos;
   unsigned int currentCluster;
-  Directory updateDir;
-  updateDir.dirEntries = (unsigned char **) malloc(sizeof(unsigned char *));
-  updateDir.size = 0;
   currentCluster = clusterNumber;
   char *target, *conv_entry;
   target = strtok(targetFile," .");
 
+
   do {
-    fseek(fileImgPtr, (getSector(currentCluster) * fsMetadata[BYTES_PER_SECTOR]),
+    fseek(fileImgPtr, (getSector(clusterNumber) * fsMetadata[BYTES_PER_SECTOR]),
           SEEK_SET);
 
           for(int i = 0; i < 16; ++i) {
             // Save pos to go back and mark dir entry empty
             fgetpos(fileImgPtr,&pos);
+
             // Read in a directory entry.
             for(j = 0; j < 32; ++j) {
               // If found the entry, mark it empty
@@ -253,43 +252,15 @@ void rmDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir,
 
             // Suppose to compare string based on file or directory.
             // Probably does not need to be implemented
-            if (fileType == 0) {
-              if (strcmp(conv_entry,target)==0){
-                found = 1;
-                fsetpos(fileImgPtr,&pos);
-                continue;
-              }
-            }
-            else {
-              if (strcmp(conv_entry,target)==0){
-                found = 1;
-                fsetpos(fileImgPtr,&pos);
-                continue;
-              }
-            }
-            // If entry and target file match, mark found and return to position to mark
 
-            // Allocate space for the new entry.
-            updateDir.dirEntries = (unsigned char **) realloc(updateDir.dirEntries,
-                              (updateDir.size + 1) * sizeof(unsigned char*));
-            // Allocate space for each character in the entry.
-            updateDir.dirEntries[updateDir.size] = (unsigned char*) malloc(32 * sizeof(unsigned char));
-
-            // Add the entry to the array
-            for (int i = 0; i < 32; ++i) {
-              updateDir.dirEntries[updateDir.size][i] = entry[i];
+            if (strcmp(conv_entry,target)==0){
+              found = 1;
+              fsetpos(fileImgPtr,&pos);
+              continue;
             }
-
-            // Update the array size.
-            updateDir.size = updateDir.size + 1;
           }
-
           // If next cluster not EOC, set current cluster to next cluster in chain.
           currentCluster = getNextCluster(fileImgPtr, currentCluster);
 
-  } while(currentCluster < EOCMIN);
-
-  // free first??
-  // Set current directory to new directory.
-  *dir = updateDir;
+  } while(currentCluster < EOCMIN);s
 }

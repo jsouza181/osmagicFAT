@@ -236,7 +236,7 @@ int main (int argc, char *argv[]) {
       }
       else {
         int flag = 0;
-        if(rmDirectory(currentDir, currentDirCluster, fileImgPtr, &ofTable, cmds[1], flag))
+        if(rmDirectory(currentDir, currentDirCluster, fileImgPtr, cmds[1], flag))
           printf("Directory has been removed.\n");
       }
     } // rmdir
