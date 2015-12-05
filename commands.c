@@ -211,7 +211,7 @@ int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPt
                 putc(newEntry[j], fileImgPtr);
               } // for
               entered = 1;
-              // need to update the directory structure
+              // need to update the directory structure (fat tables)
               break; // done, exit loop
             } // if empty
           } // for
