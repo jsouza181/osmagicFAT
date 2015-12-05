@@ -197,14 +197,15 @@ void freeCluster(FILE *fileImgPtr, unsigned int clusterNumber) {
   fseek(fileImgPtr, fatEntryOffset, SEEK_CUR);
 
   // Mark cluster as free.
-  putc(0x00,fileImgPtr);
-  putc(0x00,fileImgPtr);
-  putc(0x00,fileImgPtr);
-  putc(0x00,fileImgPtr);
+  putc(0,fileImgPtr);
+  putc(0,fileImgPtr);
+  putc(0,fileImgPtr);
+  putc(0,fileImgPtr);
 
 }
 
-void rmDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir, char *targetFile){
+void rmDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir,
+                    char *targetFile, int fileType){
 
   unsigned char entry[32];
   int j, found = 0;
@@ -215,7 +216,7 @@ void rmDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir, 
   updateDir.size = 0;
   currentCluster = clusterNumber;
   char *target, *conv_entry;
-  target = strtok(targetFile,".");
+  target = strtok(targetFile," .");
 
   do {
     fseek(fileImgPtr, (getSector(currentCluster) * fsMetadata[BYTES_PER_SECTOR]),
@@ -235,6 +236,7 @@ void rmDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir, 
                 entry[j] = getc(fileImgPtr);
             }
 
+
             // If the entry is a long name entry, do not add it.
             if((entry[11] | 0xF0) == 0xFF)
               continue;
@@ -249,12 +251,24 @@ void rmDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir, 
             char* new_entry = (char *)(entry);
             conv_entry = strtok(new_entry," ");
 
-            // If entry and target file match, mark found and return to position to mark
-            if (strcmp(conv_entry,target)==0){
-              found = 1;
-              fsetpos(fileImgPtr,&pos);
-              continue;
+            // Suppose to compare string based on file or directory.
+            // Probably does not need to be implemented
+            if (fileType == 0) {
+              if (strcmp(conv_entry,target)==0){
+                found = 1;
+                fsetpos(fileImgPtr,&pos);
+                continue;
+              }
             }
+            else {
+              if (strcmp(conv_entry,target)==0){
+                found = 1;
+                fsetpos(fileImgPtr,&pos);
+                continue;
+              }
+            }
+            // If entry and target file match, mark found and return to position to mark
+
             // Allocate space for the new entry.
             updateDir.dirEntries = (unsigned char **) realloc(updateDir.dirEntries,
                               (updateDir.size + 1) * sizeof(unsigned char*));
@@ -268,7 +282,6 @@ void rmDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir, 
 
             // Update the array size.
             updateDir.size = updateDir.size + 1;
-
           }
 
           // If next cluster not EOC, set current cluster to next cluster in chain.

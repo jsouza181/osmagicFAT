@@ -234,6 +234,11 @@ int main (int argc, char *argv[]) {
         printf("Error: Invalid arguments.\n");
         printf("\'%s\' is not a valid name\n", cmds[1]);
       }
+      else {
+        int flag = 0;
+        if(rmDirectory(currentDir, currentDirCluster, fileImgPtr, &ofTable, cmds[1], flag))
+          printf("Directory has been removed.\n");
+      }
     } // rmdir
     else if (strcmp(cmds[0], "read") == 0) {
 
