@@ -35,7 +35,6 @@ void setShortName(unsigned char* dirEntry, char* entryName) {
   for (size_t i = 0; i < 11; ++i) {
     dirEntry[i] = ' ';
   }
-  // dirEntry[8] = '\0';
   for (size_t i = 0; i < 8; ++i) {
     if (entryName[i] != ' ' && entryName[i] != '\0') {
       // handle the extension
