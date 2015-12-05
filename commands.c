@@ -232,7 +232,7 @@ int rm(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
 }
 
 int rmDirectory(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
-        OpenFileTable *ofTable, char *targetFile, int flag){
+                char *targetFile, int flag){
 
   unsigned int firstCluster = 0;
   unsigned int *firstClusterPtr = &firstCluster;
@@ -242,8 +242,9 @@ int rmDirectory(Directory currentDir, unsigned int currentDirCluster, FILE *file
   int *indexPtr = &fileIndex;
   capFilename(targetFile);
 
-
   if(findFilenameCluster(currentDir,targetFile, firstClusterPtr, indexPtr)){
+
+
     if (!isDirectory(currentDir.dirEntries[*indexPtr])){
       printf("%s is not a directory.\n", targetFile);
       return 0;
@@ -255,7 +256,6 @@ int rmDirectory(Directory currentDir, unsigned int currentDirCluster, FILE *file
 
     getDirEntries(fileImgPtr,firstCluster,&rmDirectory);
 
-    printf("Directory size is %d\n", rmDirectory.size);
     if (rmDirectory.size > 2){
       printf("Error! Directory is not empty.\n");
       return 0;
@@ -283,12 +283,15 @@ int rmDirectory(Directory currentDir, unsigned int currentDirCluster, FILE *file
 
     // Reverse through Cluster to zero out bytes
     for(int i = fileEntry.clusterCount; i > -1; --i){
-      int clusterNum = fileEntry.clusterOffsets[i];
-      freeCluster(fileImgPtr,clusterNum);
+        int clusterNum = fileEntry.clusterOffsets[i];
+        freeCluster(fileImgPtr,clusterNum);
     }
+
 
     // Remove file from Directory entry
     rmDirEntries(fileImgPtr, currentDirCluster, &currentDir, targetFile, 1);
+
+
 
     return 1;
   }

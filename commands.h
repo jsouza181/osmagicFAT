@@ -22,6 +22,6 @@ int rm(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
         OpenFileTable *ofTable, char *targetFile, int flag);
 
 int rmDirectory(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
-        OpenFileTable *ofTable, char *targetFile, int flag);
+        char *targetFile, int flag);
 
 #endif
