@@ -95,7 +95,6 @@ unsigned int getNextCluster(FILE *fileImgPtr, unsigned int clusterNumber) {
   // First, find the sector within the FAT.
   fatSectorNumber = fsMetadata[RESERVED_SECTOR_COUNT] +
                     (fatOffset / fsMetadata[BYTES_PER_SECTOR]);
-
   // Then, find the 4byte integer within the sector.
   fatEntryOffset = fatOffset % fsMetadata[BYTES_PER_SECTOR];
 
@@ -263,6 +262,5 @@ void rmDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir,
           // If next cluster not EOC, set current cluster to next cluster in chain.
           currentCluster = getNextCluster(fileImgPtr, currentCluster);
 
-  } while(currentCluster < EOCMIN);
-
+  } while(currentCluster < EOCMIN);s
 }

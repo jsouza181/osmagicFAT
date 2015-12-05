@@ -3,6 +3,7 @@
 #include <string.h>
 #include "commands.h"
 #include "direntries.h"
+#include "metadata.h"
 
 // Find the names of each file/directory in the given directory and print.
 void ls(Directory dir) {
@@ -93,7 +94,7 @@ int open(Directory currentDir, FILE *fileImgPtr, OpenFileTable *ofTable,
     ofTable->entries[ofTable->size].flag = flag;
     strcpy(ofTable->entries[ofTable->size].filename, targetFile);
     // Allocate the entry's cluster chain.
-    ofTable->entries[ofTable->size].clusterOffsets = (unsigned int*) malloc(0 * sizeof(unsigned int));
+    ofTable->entries[ofTable->size].clusterOffsets = (unsigned int*) malloc(sizeof(unsigned int));
     ofTable->entries[ofTable->size].clusterCount = 0;
 
     // Populate the cluster chain.
@@ -134,14 +135,23 @@ int open(Directory currentDir, FILE *fileImgPtr, OpenFileTable *ofTable,
 //Mod file size with number of 512 bytes
 
 // creates a directory or a file depending on the isDir flag: 0 is for file, > 0 is for directory
-int create(Directory currentDir, char* filename, int isDir) {
+int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
+    char* filename, int isDir) {
+  fpos_t pos = -1;
+  unsigned char* newEntry = NULL;
+  unsigned char tmpEntry[32];
+  unsigned int entered = 0;
   // File's first cluster (used to build and then store cluster chain).
   unsigned int firstCluster = 0;
   unsigned int *firstClusterPtr = &firstCluster;
+  unsigned int currentCluster = currentDirCluster;
   // Index of the found file in the directory entry table.
   // Used to access the file's dir entry.
   int fileIndex = 0;
   int *indexPtr = &fileIndex;
+  int bytesPerCluster = fsMetadata[BYTES_PER_SECTOR] * fsMetadata[SECTORS_PER_CLUSTER];
+  int entriesPerCluster = bytesPerCluster / 32;
+  int totalEntries = currentDir.size;
 
   if (filename != NULL) {
     capFilename(filename);
@@ -152,16 +162,67 @@ int create(Directory currentDir, char* filename, int isDir) {
       return 0;
     }
     else {
+      newEntry = (unsigned char*) malloc(sizeof(unsigned char *));
+      // set the name of the entry
+      for (size_t i = 0; i < sizeof(filename) && i < MAX_FILENAME_SIZE; ++i) {
+        newEntry[i] = filename[i];
+      } // for
+      // set fileSize to 0
+      for (size_t i = 0; i < 4; ++i) {
+        newEntry[28+i] = 0x00;
+      }
+
       if (isDir) {
         printf("Creating directory as %s\n", filename);
-        return 1;
+        newEntry[11] = 0x10; // set all bits to 0 except directory bit
       } // if
       else {
         printf("Creating file as %s\n", filename);
         // create a new entry in the next available cluster
-
-        return 1;
+        newEntry[11] = 0x00; // set all bits to 0 except directory bit
       } // else
+      // check if cluster has enough space
+      if (totalEntries % entriesPerCluster == 0 && totalEntries != 0) {
+        // it is full
+        printf("Allocating new cluster\n");
+        // code here
+      }
+      else {
+        // add to the last entry in cluster
+        // write to the cluster
+        do {
+          fseek(fileImgPtr, (getSector(currentCluster) * fsMetadata[BYTES_PER_SECTOR]),
+                SEEK_SET);
+          // iterate through entries
+          for (size_t i = 0; i < 16; ++i) {
+            // save position
+            fgetpos(fileImgPtr, &pos);
+            // iterate through entry data
+            for (size_t j = 0; j < 32; ++j) {
+              tmpEntry[j] = getc(fileImgPtr);
+            } // for
+            // check if entry is empty, if so enter data
+            if (tmpEntry[0] == 0xE5 || tmpEntry[0] == 0x00) {
+              fsetpos(fileImgPtr, &pos);
+              // overwrite entry with created one
+              for (size_t j = 0; j < 32; ++j) {
+                putc(newEntry[j], fileImgPtr);
+              } // for
+              entered = 1;
+              // need to update the directory structure
+              break; // done, exit loop
+            } // if empty
+          } // for
+
+          if (!entered) {
+            currentCluster = getNextCluster(fileImgPtr, currentCluster);
+          }
+        } while(currentCluster < EOCMIN && !entered);
+      } // else
+      // for (size_t i = 0; i < 29; ++i) {
+      //   printf("%u\n", (unsigned int)newEntry[i]);
+      // }
+      return 1;
     } // else
   } // if
   else {
@@ -194,7 +255,7 @@ int rm(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
 
     OpenFileEntry fileEntry;
     fileEntry.flag = flag;
-    fileEntry.clusterOffsets = (unsigned int*) malloc(0 * sizeof(unsigned int));
+    fileEntry.clusterOffsets = (unsigned int*) malloc(sizeof(unsigned int));
     fileEntry.clusterCount = 0;
 
     unsigned int nextCluster = firstCluster;
