@@ -137,7 +137,7 @@ int open(Directory currentDir, FILE *fileImgPtr, OpenFileTable *ofTable,
 // creates a directory or a file depending on the isDir flag: 0 is for file, > 0 is for directory
 int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
     char* filename, int isDir) {
-  fpos_t pos = -1;
+  fpos_t pos;
   unsigned char* newEntry = NULL;
   unsigned char tmpEntry[32];
   unsigned int entered = 0;
