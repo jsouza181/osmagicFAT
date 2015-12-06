@@ -394,6 +394,8 @@ int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPt
   fpos_t pos;
   unsigned char newEntry[32];
   unsigned char tmpEntry[32];
+  unsigned char byteA, byteB, byteC, byteD;
+  unsigned int clusterNum = 0;
   unsigned int entered = 0;
   // File's first cluster (used to build and then store cluster chain).
   unsigned int firstCluster = 0;
@@ -443,7 +445,25 @@ int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPt
         // code here
       }
       else {
-        // add to the last entry in cluster
+        // get the next cluster number
+        clusterNum = getNewCluster(fileImgPtr);
+        // Separate clusterNum into four bytes.
+        if (0 != clusterNum) {
+          byteA = (clusterNum & 0xFF000000) >> 24;
+          byteB = (clusterNum & 0x00FF0000) >> 16;
+          byteC = (clusterNum & 0x0000FF00) >> 8;
+          byteD = (clusterNum & 0x000000FF);
+
+          newEntry[20] = byteB;
+          newEntry[21] = byteA;
+          newEntry[26] = byteD;
+          newEntry[27] = byteC;
+        } // if
+        else {
+          printf("Unable to allocate cluster for new entry\n");
+          return 0;
+        }
+
         // write to the cluster
         do {
           fseek(fileImgPtr, (getSector(currentCluster) * fsMetadata[BYTES_PER_SECTOR]),
@@ -464,7 +484,6 @@ int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPt
                 putc(newEntry[j], fileImgPtr);
               } // for
               entered = 1;
-              // need to update the directory structure (fat tables)
               break; // done, exit loop
             } // if empty
           } // for
