@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Open the file image.
-  fileImgPtr = fopen(argv[1], "rb");
+  fileImgPtr = fopen(argv[1], "rb+");
     if(fileImgPtr == NULL) {
       printf("Error: could not open file image\n.");
       return 1;
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     printf("\n");
     */
 
-    // Print prompt and get user input.
+/* TESTING print open table entries
     for(int i = 0; i < ofTable.size; ++i) {
       printf("Open file %d: %s, flag %d, clusCount %d, \n",
             i, ofTable.entries[i].filename,
@@ -76,8 +76,10 @@ int main(int argc, char *argv[]) {
       for(int j = 0; j < ofTable.entries[i].clusterCount; ++j)
         printf("%d ", ofTable.entries[i].clusterOffsets[j]);
       printf("\n");
-
     }
+      */
+
+    // Print prompt and get user input.
     printPrompt();
     if (fgets(input, 256, stdin) == NULL){
       printf("Error! Invalid input!\n");
@@ -93,7 +95,7 @@ int main(int argc, char *argv[]) {
     else if (strcmp(cmds[0], "open") == 0) {
       if(tokCount != 3) {
         printf("Error: Invalid arguments.\n");
-        printf("Expected: open <file> <flag>\n");
+        printf("Expected: open <filename> <flag>\n");
       }
       else {
         // Convert flag input string to int.
@@ -111,17 +113,32 @@ int main(int argc, char *argv[]) {
           continue;
         }
 
-        if(open(currentDir, fileImgPtr, &ofTable, cmds[1], flag))
-          printf("success!\n");
-        else
-          printf("failure\n");
+        open(currentDir, fileImgPtr, &ofTable, cmds[1], flag);
       }
     }
 
-    else if (strcmp(cmds[0], "close") == 0){}
+    else if (strcmp(cmds[0], "close") == 0) {
+      if(tokCount != 2) {
+        printf("Error: Invalid arguments.\n");
+        printf("Expected: close <filename>\n");
+      }
+      else {
+        if(!closeFile(&ofTable, cmds[1]))
+          printf("Error: File has not been opened.\n");
+      }
+    }
+
     else if (strcmp(cmds[0], "create") == 0){}
     else if (strcmp(cmds[0], "rm") == 0){}
-    else if (strcmp(cmds[0], "size") == 0){}
+    else if (strcmp(cmds[0], "size") == 0) {
+      if(tokCount != 2) {
+        printf("Error: Invalid arguments.\n");
+        printf("Expected: size <filename>\n");
+      }
+      else {
+        printf("%d bytes\n", size(currentDir, cmds[1]));
+      }
+    }
 
     else if (strcmp(cmds[0], "cd") == 0) {
       if(tokCount != 2) {
@@ -144,8 +161,31 @@ int main(int argc, char *argv[]) {
     }
     else if (strcmp(cmds[0], "mkdir") == 0){}
     else if (strcmp(cmds[0], "rmdir") == 0){}
-    else if (strcmp(cmds[0], "read") == 0){}
-    else if (strcmp(cmds[0], "write") == 0){}
+    else if (strcmp(cmds[0], "read") == 0) {
+      if(tokCount != 4) {
+        printf("Error: Invalid arguments.\n");
+        printf("Expected: read <filename> <position> <number of bytes>\n");
+      }
+      else {
+        int pos, numBytes;
+        pos = atoi(cmds[2]);
+        numBytes = atoi(cmds[3]);
+        readFile(currentDir, &ofTable, fileImgPtr, cmds[1], pos, numBytes);
+      }
+    }
+    else if (strcmp(cmds[0], "write") == 0) {
+      if(tokCount != 5) {
+        printf("Error: Invalid arguments.\n");
+        printf("Expected: write <filename> <position> <number of bytes> <string>\n");
+      }
+      else {
+        int pos, numBytes;
+        pos = atoi(cmds[2]);
+        numBytes = atoi(cmds[3]);
+        writeFile(currentDir, currentDirCluster, &ofTable, fileImgPtr, cmds[1],
+                  pos, numBytes, cmds[4]);
+      }
+    }
     else {
       printf("Invalid command. Please try again.\n");
     }

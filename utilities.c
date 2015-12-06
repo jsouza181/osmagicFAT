@@ -116,6 +116,96 @@ unsigned int getNextCluster(FILE *fileImgPtr, unsigned int clusterNumber) {
 }
 
 /*
+ * Find a new available cluster from the FAT table.
+ * In addition, update the cluster's FAT table value to reflect that it is no
+ * longer a free cluster.
+ */
+unsigned int getNewCluster(FILE *fileImgPtr) {
+  unsigned int newCluster;
+  unsigned int fatOffset;
+  unsigned int fatSectorNumber;
+  unsigned int fatEntryOffset;
+  unsigned int byteA, byteB, byteC, byteD;
+
+  // First, seek to the FAT table.
+  // FAT uses 4byte entries. Start at root cluster.
+  fatOffset = fsMetadata[ROOT_CLUSTER] * 4;
+  // Find the sector within the FAT.
+  fatSectorNumber = fsMetadata[RESERVED_SECTOR_COUNT] +
+                    (fatOffset / fsMetadata[BYTES_PER_SECTOR]);
+  // Find the 4byte integer within the sector.
+  fatEntryOffset = fatOffset % fsMetadata[BYTES_PER_SECTOR];
+  // seek to the sector, and then to the offset.
+  fseek(fileImgPtr, (fatSectorNumber * fsMetadata[BYTES_PER_SECTOR]), SEEK_SET);
+  fseek(fileImgPtr, fatEntryOffset, SEEK_CUR);
+
+  // Set the iterator to the starting positiong (root cluster) and seek past
+  // its table entry.
+  unsigned int clusterIterator = fsMetadata[ROOT_CLUSTER];
+  fseek(fileImgPtr, 4, SEEK_CUR);
+  // Now, iterate through the FAT table until an empty entry is found
+  do {
+    clusterIterator = clusterIterator + 1;
+    // Read 4 bytes into an int.
+    byteA = getc(fileImgPtr);
+    byteB = getc(fileImgPtr);
+    byteC = getc(fileImgPtr);
+    byteD = getc(fileImgPtr);
+    newCluster = swapFourBytes(byteA, byteB, byteC, byteD);
+  } while (newCluster != 0);
+
+  // Set this cluster to EOC.
+  setCluster(fileImgPtr, clusterIterator, 0x0F, 0xFF, 0xFF, 0xFF);
+  // Return the new cluster.
+  return clusterIterator;
+}
+
+/*
+ * Link clusters by replacing clusterA's EOC value with clusterB, thus adding
+ * clusterB to clusterA's clusterchain.
+ */
+void linkClusters(FILE *fileImgPtr, unsigned int clusterA, unsigned int clusterB) {
+  unsigned char byteA, byteB, byteC, byteD;
+
+  // Separate clusterB into four bytes.
+  byteA = (clusterB & 0xFF000000) >> 24;
+  byteB = (clusterB & 0x00FF0000) >> 16;
+  byteC = (clusterB & 0x0000FF00) >> 8;
+  byteD = (clusterB & 0x000000FF);
+
+  // Write these 4 bytes to clusterA.
+  setCluster(fileImgPtr, clusterA, byteA, byteB, byteC, byteD);
+}
+
+void setCluster(FILE *fileImgPtr, unsigned int clusterNumber, unsigned char byteA,
+                  unsigned char byteB, unsigned char byteC, unsigned char byteD) {
+  unsigned int fatOffset;
+  unsigned int fatSectorNumber;
+  unsigned int fatEntryOffset;
+
+/****
+  UPDATE ALL FAT TABLES
+  *****/
+
+  // FAT uses 4byte entries
+  fatOffset = clusterNumber * 4;
+  // First, find the sector within the FAT.
+  fatSectorNumber = fsMetadata[RESERVED_SECTOR_COUNT] +
+                    (fatOffset / fsMetadata[BYTES_PER_SECTOR]);
+  // Then, find the 4byte integer within the sector.
+  fatEntryOffset = fatOffset % fsMetadata[BYTES_PER_SECTOR];
+  // Now, fseek to the sector, and then to the offset.
+  fseek(fileImgPtr, (fatSectorNumber * fsMetadata[BYTES_PER_SECTOR]), SEEK_SET);
+  fseek(fileImgPtr, fatEntryOffset, SEEK_CUR);
+
+  // Set the bytes of the cluster.
+  putc(byteD,fileImgPtr);
+  putc(byteC,fileImgPtr);
+  putc(byteB,fileImgPtr);
+  putc(byteA,fileImgPtr);
+}
+
+/*
  * Read the sector(s) of the given directory cluster number.
  * Create a new directory entry (char*) for each directory entry.
  * Add these entries to the Directory object passed in.

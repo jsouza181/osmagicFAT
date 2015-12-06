@@ -35,6 +35,11 @@ void capFilename(char *filename);
 void printSector(FILE *fileImgPtr, unsigned int sectorNum);
 unsigned int getSector(unsigned int clusterNumber);
 unsigned int getNextCluster(FILE *fileImgPtr, unsigned int clusterNumber);
+unsigned int getNewCluster(FILE *fileImgPtr);
+void linkClusters(FILE *fileImgPtr, unsigned int clusterA, unsigned int clusterB);
+void setCluster(FILE *fileImgPtr, unsigned int clusterNumber, unsigned char byteA,
+                  unsigned char byteB, unsigned char byteC, unsigned char byteD);
+
 void getDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir);
 
 
