@@ -392,7 +392,7 @@ int writeFile(Directory currentDir, unsigned int currentDirCluster,
 int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
     char* filename, int isDir) {
   fpos_t pos;
-  unsigned char* newEntry = NULL;
+  unsigned char newEntry[32];
   unsigned char tmpEntry[32];
   unsigned int entered = 0;
   // File's first cluster (used to build and then store cluster chain).
@@ -416,7 +416,6 @@ int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPt
       return 0;
     }
     else {
-      newEntry = (unsigned char*) malloc(0 * sizeof(unsigned char *));
       // lets set all bytes to 0 first
       for (size_t i = 0; i < 32; ++i) {
         newEntry[i] = 0x00;

@@ -115,7 +115,6 @@ void setShortName(unsigned char* dirEntry, char* entryName) {
       else {
         dirEntry[i] = entryName[i];
       } // else
-      printf("direntry[%d]: %c\n",(int)i,dirEntry[i]);
     } // if
     else {
       break;
