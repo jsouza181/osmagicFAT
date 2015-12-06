@@ -1,5 +1,0 @@
-Programs segfaults when "enter" is input.
-
-Program can take from ~10-60 seconds to correctly reflect changes made to the file system when a file is modified/added/removed while the program is running.
-
-*********Writing to a file is based on the assumption that the file exists in the current directory, if it exists at all.***********

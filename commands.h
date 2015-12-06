@@ -22,4 +22,17 @@ int writeFile(Directory currentDir, unsigned int currentDirCluster,
 unsigned int size(Directory currentDir, char *targetFile);
 
 
+// create a directory or a file depending on the isDir flag
+// 0 - create a file
+// 1 - create a directory
+// if the filename is already in use, unable to create it (out of mem), returns 0
+int create(Directory currentDir,unsigned int currentDirCluster,
+  FILE *fileImgPtr, char* filename, int isDir);
+
+int rm(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
+  OpenFileTable *ofTable, char *targetFile, int flag);
+
+int rmDirectory(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
+        char *targetFile, int flag);
+
 #endif

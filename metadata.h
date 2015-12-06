@@ -18,8 +18,6 @@
 // The first data sector (NOT THE FIRST BYTE!)
 #define FIRST_DATA_SECTOR 8
 
-
-
 extern unsigned int fsMetadata[16];
 
 int readBootSector(FILE *fileImgPtr);

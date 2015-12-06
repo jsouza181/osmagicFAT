@@ -42,5 +42,8 @@ void setCluster(FILE *fileImgPtr, unsigned int clusterNumber, unsigned char byte
 
 void getDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir);
 
+void rmDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir,
+                  char *targetFile, int fileType);
+void freeCluster(FILE *fileImgPtr, unsigned int clusterNumber);
 
 #endif

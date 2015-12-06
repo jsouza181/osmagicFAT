@@ -54,11 +54,8 @@ $> make clean
 ```
 $> ./runCheck.bash <imagefile>
 ```
-note: make sure fsck.fat is in the same directory as runCheck.bash
+note: make sure fsck.fat is in the same directory as runCheck.bash 
 
 ### Known Bugs ###
 - Program segfaults when only "enter" is the user input
 - Program can take from ~10-60 seconds to correctly reflect changes made to the file system when a file is modified/added/removed while the program is running
-
-### Assumptions ###
-- Writing to a file is based on the assumption that the file exists in the current directory, if it exists at all.

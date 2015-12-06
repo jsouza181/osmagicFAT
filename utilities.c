@@ -95,7 +95,6 @@ unsigned int getNextCluster(FILE *fileImgPtr, unsigned int clusterNumber) {
   // First, find the sector within the FAT.
   fatSectorNumber = fsMetadata[RESERVED_SECTOR_COUNT] +
                     (fatOffset / fsMetadata[BYTES_PER_SECTOR]);
-
   // Then, find the 4byte integer within the sector.
   fatEntryOffset = fatOffset % fsMetadata[BYTES_PER_SECTOR];
 
@@ -264,4 +263,94 @@ void getDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir)
     //printf("current cluster is now: %02x\n", currentCluster);
   } while(currentCluster < EOCMIN);
 
+}
+
+
+void freeCluster(FILE *fileImgPtr, unsigned int clusterNumber) {
+
+  unsigned int fatOffset;
+  unsigned int fatSectorNumber;
+  unsigned int fatEntryOffset;
+
+  // FAT uses 4byte entries
+  fatOffset = clusterNumber * 4;
+
+  // First, find the sector within the FAT.
+  fatSectorNumber = fsMetadata[RESERVED_SECTOR_COUNT] +
+                    (fatOffset / fsMetadata[BYTES_PER_SECTOR]);
+
+  // Then, find the 4byte integer within the sector.
+  fatEntryOffset = fatOffset % fsMetadata[BYTES_PER_SECTOR];
+
+  // Now, fseek to the sector, and then to the offset.
+  fseek(fileImgPtr, (fatSectorNumber * fsMetadata[BYTES_PER_SECTOR]), SEEK_SET);
+  fseek(fileImgPtr, fatEntryOffset, SEEK_CUR);
+
+  // Mark cluster as free.
+  putc(0,fileImgPtr);
+  putc(0,fileImgPtr);
+  putc(0,fileImgPtr);
+  putc(0,fileImgPtr);
+
+}
+
+void rmDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir,
+                    char *targetFile, int fileType){
+
+  unsigned char entry[32];
+  int j, found = 0;
+  fpos_t pos;
+  unsigned int currentCluster;
+  currentCluster = clusterNumber;
+  char *target, *conv_entry;
+  target = strtok(targetFile," .");
+
+
+  do {
+    fseek(fileImgPtr, (getSector(clusterNumber) * fsMetadata[BYTES_PER_SECTOR]),
+          SEEK_SET);
+
+          for(int i = 0; i < 16; ++i) {
+            // Save pos to go back and mark dir entry empty
+            fgetpos(fileImgPtr,&pos);
+
+            // Read in a directory entry.
+            for(j = 0; j < 32; ++j) {
+              // If found the entry, mark it empty
+              if (found == 1 && j == 0){
+                  putc(0xE5,fileImgPtr);
+                  found = 0;
+              }
+              else
+                entry[j] = getc(fileImgPtr);
+            }
+
+
+            // If the entry is a long name entry, do not add it.
+            if((entry[11] | 0xF0) == 0xFF)
+              continue;
+            // If the entry is empty, do not add it.
+            if(entry[0] == 0xE5)
+              continue;
+            // If the entry is free, and is the last entry, end the entire function.
+            if(entry[0] == 0x00)
+              return;
+
+            // Create new char to compare with targetFile as Entry is an unsigned char *
+            char* new_entry = (char *)(entry);
+            conv_entry = strtok(new_entry," ");
+
+            // Suppose to compare string based on file or directory.
+            // Probably does not need to be implemented
+
+            if (strcmp(conv_entry,target)==0){
+              found = 1;
+              fsetpos(fileImgPtr,&pos);
+              continue;
+            }
+          }
+          // If next cluster not EOC, set current cluster to next cluster in chain.
+          currentCluster = getNextCluster(fileImgPtr, currentCluster);
+
+  } while(currentCluster < EOCMIN);
 }

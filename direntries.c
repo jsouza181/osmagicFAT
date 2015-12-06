@@ -98,6 +98,31 @@ void setFileSize(FILE *fileImgPtr, unsigned int currentDirCluster,
   } while(nextCluster < EOCMIN);
 }
 
+void setShortName(unsigned char* dirEntry, char* entryName) {
+  // set all to whitespace
+  for (size_t i = 0; i < 11; ++i) {
+    dirEntry[i] = ' ';
+  }
+  for (size_t i = 0; i < 8; ++i) {
+    if (entryName[i] != ' ' && entryName[i] != '\0') {
+      // handle the extension
+      if (entryName[i] == '.') {
+        dirEntry[8] = entryName[i+1];
+        dirEntry[9] = entryName[i+2];
+        dirEntry[10] = entryName[i+3];
+        break;
+      } // if
+      else {
+        dirEntry[i] = entryName[i];
+      } // else
+      printf("direntry[%d]: %c\n",(int)i,dirEntry[i]);
+    } // if
+    else {
+      break;
+    } // else
+  } // for
+} // setShortName
+
 int isDirectory(unsigned char *dirEntry) {
   unsigned char dirAttribute = dirEntry[11];
 

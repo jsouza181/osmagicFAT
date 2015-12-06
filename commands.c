@@ -95,8 +95,7 @@ int open(Directory currentDir, FILE *fileImgPtr, OpenFileTable *ofTable,
     ofTable->entries[ofTable->size].flag = flag;
     strcpy(ofTable->entries[ofTable->size].filename, targetFile);
     // Allocate the entry's cluster chain.
-    ofTable->entries[ofTable->size].clusterOffsets =
-                              (unsigned int*) malloc(0 * sizeof(unsigned int));
+    ofTable->entries[ofTable->size].clusterOffsets = (unsigned int*) malloc(sizeof(unsigned int));
     ofTable->entries[ofTable->size].clusterCount = 0;
 
     // Populate the cluster chain.
@@ -180,8 +179,6 @@ int readFile(Directory currentDir, OpenFileTable *ofTable, FILE *fileImgPtr,
   }
 
   // Check if the number of the position is greater than the file size.
-/*****
-**** UNCOMMENT AFTER FIXING RESIZING IN WRITE
   if(position >= size(currentDir, targetFile)) {
     printf("Error: Invalid read starting position.\n");
     return 0;
@@ -191,7 +188,6 @@ int readFile(Directory currentDir, OpenFileTable *ofTable, FILE *fileImgPtr,
     printf("Error: Attempt to read beyond EOF.\n");
     return 0;
   }
-  ********/
 
   // Next cluster in the file's cluster chain to read.
   unsigned int nextCluster;
@@ -390,4 +386,236 @@ int writeFile(Directory currentDir, unsigned int currentDirCluster,
     nextCluster = getNextCluster(fileImgPtr, nextCluster);
   }
   return 0;
+}
+
+// creates a directory or a file depending on the isDir flag: 0 is for file, > 0 is for directory
+int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
+    char* filename, int isDir) {
+  fpos_t pos = -1;
+  unsigned char* newEntry = NULL;
+  unsigned char tmpEntry[32];
+  unsigned int entered = 0;
+  // File's first cluster (used to build and then store cluster chain).
+  unsigned int firstCluster = 0;
+  unsigned int *firstClusterPtr = &firstCluster;
+  unsigned int currentCluster = currentDirCluster;
+  // Index of the found file in the directory entry table.
+  // Used to access the file's dir entry.
+  int fileIndex = 0;
+  int *indexPtr = &fileIndex;
+  int bytesPerCluster = fsMetadata[BYTES_PER_SECTOR] * fsMetadata[SECTORS_PER_CLUSTER];
+  int entriesPerCluster = bytesPerCluster / 32;
+  int totalEntries = currentDir.size;
+
+  if (filename != NULL) {
+    capFilename(filename);
+
+    // check if filename exists in current directory
+    if(findFilenameCluster(currentDir, filename, firstClusterPtr, indexPtr)) {
+      printf("Error: a file or directory with that name already exists\n");
+      return 0;
+    }
+    else {
+      newEntry = (unsigned char*) malloc(0 * sizeof(unsigned char *));
+      // lets set all bytes to 0 first
+      for (size_t i = 0; i < 32; ++i) {
+        newEntry[i] = 0x00;
+      }
+      setShortName(newEntry, filename);
+      // set the name of the entry
+      // - 3 for the extensions
+      // for (size_t i = 0; i < sizeof(filename) && i < MAX_FILENAME_SIZE - 3; ++i) {
+      //   newEntry[i] = filename[i];
+      // } // for
+
+      if (isDir) {
+        printf("Creating directory as %s\n", filename);
+        newEntry[11] = 0x10; // set all bits to 0 except directory bit
+      } // if
+      else {
+        printf("Creating file as %s\n", filename);
+        // create a new entry in the next available cluster
+        newEntry[11] = 0x00;
+      } // else
+      // check if cluster has enough space
+      if (totalEntries % entriesPerCluster == 0 && totalEntries != 0) {
+        // it is full
+        printf("Allocating new cluster\n");
+        // code here
+      }
+      else {
+        // add to the last entry in cluster
+        // write to the cluster
+        do {
+          fseek(fileImgPtr, (getSector(currentCluster) * fsMetadata[BYTES_PER_SECTOR]),
+                SEEK_SET);
+          // iterate through entries
+          for (size_t i = 0; i < 16; ++i) {
+            // save position
+            fgetpos(fileImgPtr, &pos);
+            // iterate through entry data
+            for (size_t j = 0; j < 32; ++j) {
+              tmpEntry[j] = getc(fileImgPtr);
+            } // for
+            // check if entry is empty, if so enter data
+            if (tmpEntry[0] == 0xE5 || tmpEntry[0] == 0x00) {
+              fsetpos(fileImgPtr, &pos);
+              // overwrite entry with created one
+              for (size_t j = 0; j < 32; ++j) {
+                putc(newEntry[j], fileImgPtr);
+              } // for
+              entered = 1;
+              // need to update the directory structure (fat tables)
+              break; // done, exit loop
+            } // if empty
+          } // for
+
+          if (!entered) {
+            currentCluster = getNextCluster(fileImgPtr, currentCluster);
+          }
+        } while(currentCluster < EOCMIN && !entered);
+      } // else
+      // for (size_t i = 0; i < 29; ++i) {
+      //   printf("%u\n", (unsigned int)newEntry[i]);
+      // }
+      return 1;
+    } // else
+  } // if
+  else {
+    return 0;
+  }
+} // create
+
+
+int rm(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
+        OpenFileTable *ofTable, char *targetFile, int flag){
+
+  unsigned int firstCluster = 0;
+  unsigned int *firstClusterPtr = &firstCluster;
+
+  int fileIndex = 0;
+  int *indexPtr = &fileIndex;
+  capFilename(targetFile);
+
+  for(int i =0; i < ofTable->size; ++i){
+    if(strcmp(ofTable->entries[i].filename, targetFile) == 0)
+      printf("Error. The file is currently open.\n");
+      return 0;
+  }
+
+  if(findFilenameCluster(currentDir,targetFile, firstClusterPtr, indexPtr)){
+    if (isDirectory(currentDir.dirEntries[*indexPtr])){
+      printf("%s is a directory.\n", targetFile);
+      return 0;
+    }
+
+    OpenFileEntry fileEntry;
+    fileEntry.flag = flag;
+    fileEntry.clusterOffsets = (unsigned int*) malloc(sizeof(unsigned int));
+    fileEntry.clusterCount = 0;
+
+    unsigned int nextCluster = firstCluster;
+    while (nextCluster < EOCMIN){
+      fileEntry.clusterOffsets = (unsigned int*) realloc(fileEntry.clusterOffsets,
+          (fileEntry.clusterCount + 1) * sizeof(unsigned int));
+
+      // Set the cluster number.
+      fileEntry.clusterOffsets[fileEntry.clusterCount] = nextCluster;
+
+      // Increment the cluster count.
+      fileEntry.clusterCount =  fileEntry.clusterCount + 1;
+
+      // Find the next cluster associated with the entry.
+      nextCluster = getNextCluster(fileImgPtr, nextCluster);
+    }
+
+    // Reverse through Cluster to zero out bytes
+    for(int i = fileEntry.clusterCount; i > -1; --i){
+      int clusterNum = fileEntry.clusterOffsets[i];
+      freeCluster(fileImgPtr,clusterNum);
+    }
+
+    // Remove file from Directory entry
+    rmDirEntries(fileImgPtr, currentDirCluster, &currentDir, targetFile, 0);
+
+    return 1;
+  }
+
+  else{
+    printf("File not found.\n");
+    return 0;
+  }
+
+}
+
+int rmDirectory(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
+                char *targetFile, int flag){
+
+  unsigned int firstCluster = 0;
+  unsigned int *firstClusterPtr = &firstCluster;
+  Directory rmDirectory;
+
+  int fileIndex = 0;
+  int *indexPtr = &fileIndex;
+  capFilename(targetFile);
+
+  if(findFilenameCluster(currentDir,targetFile, firstClusterPtr, indexPtr)){
+
+
+    if (!isDirectory(currentDir.dirEntries[*indexPtr])){
+      printf("%s is not a directory.\n", targetFile);
+      return 0;
+    }
+
+
+    rmDirectory.dirEntries = (unsigned char**)malloc(0*sizeof(unsigned char*));
+    rmDirectory.size = 0;
+
+    getDirEntries(fileImgPtr,firstCluster,&rmDirectory);
+
+    if (rmDirectory.size > 2){
+      printf("Error! Directory is not empty.\n");
+      return 0;
+    }
+
+    OpenFileEntry fileEntry;
+    fileEntry.flag = flag;
+    fileEntry.clusterOffsets = (unsigned int*) malloc(0 * sizeof(unsigned int));
+    fileEntry.clusterCount = 0;
+
+    unsigned int nextCluster = firstCluster;
+    while (nextCluster < EOCMIN){
+      fileEntry.clusterOffsets = (unsigned int*) realloc(fileEntry.clusterOffsets,
+          (fileEntry.clusterCount + 1) * sizeof(unsigned int));
+
+      // Set the cluster number.
+      fileEntry.clusterOffsets[fileEntry.clusterCount] = nextCluster;
+
+      // Increment the cluster count.
+      fileEntry.clusterCount =  fileEntry.clusterCount + 1;
+
+      // Find the next cluster associated with the entry.
+      nextCluster = getNextCluster(fileImgPtr, nextCluster);
+    }
+
+    // Reverse through Cluster to zero out bytes
+    for(int i = fileEntry.clusterCount; i > -1; --i){
+        int clusterNum = fileEntry.clusterOffsets[i];
+        freeCluster(fileImgPtr,clusterNum);
+    }
+
+
+    // Remove file from Directory entry
+    rmDirEntries(fileImgPtr, currentDirCluster, &currentDir, targetFile, 1);
+
+
+
+    return 1;
+  }
+
+  else{
+    printf("File not found.\n");
+    return 0;
+  }
+
 }
