@@ -30,6 +30,74 @@ void getShortName(unsigned char *dirEntry, char* entryName) {
   }
 }
 
+unsigned int getFileSize(unsigned char *dirEntry) {
+  return swapFourBytes(dirEntry[28], dirEntry[29], dirEntry[30], dirEntry[31]);
+}
+
+/*
+ * This function sets the size attribute of a specified directory entry.
+ * currentDirCluster is the first cluster of the current directory.
+ * targetEntry is the entry to be updated.
+ * newBytes is the number of bytes to set as the total size.
+ */
+void setFileSize(FILE *fileImgPtr, unsigned int currentDirCluster,
+                unsigned char *targetEntry, int newSize) {
+
+  unsigned char entry[32];
+  unsigned int nextCluster;
+
+  // Break the file's size into 4 characters.
+  unsigned char sizeA = (newSize & 0xFF000000) >> 24;
+  unsigned char sizeB = (newSize & 0x00FF0000) >> 16;
+  unsigned char sizeC = (newSize & 0x0000FF00) >> 8;
+  unsigned char sizeD = (newSize & 0x000000FF);
+
+  nextCluster = currentDirCluster;
+
+  // Loop until the end of cluster chain is reached or the entry is found.
+  do {
+    // Seek to the cluster's first sector.
+    fseek(fileImgPtr, (getSector(nextCluster) * fsMetadata[BYTES_PER_SECTOR]),
+          SEEK_SET);
+
+    // Loop once for each directory entry that can fit in the sector.
+    for(int i = 0; i < 16; ++i) {
+      // Read in a directory entry.
+      for(int j = 0; j < 32; ++j) {
+        entry[j] = getc(fileImgPtr);
+      }
+
+      // If the entry is a long name entry, do not add it.
+      if((entry[11] | 0xF0) == 0xFF)
+        continue;
+      // If the entry is empty, do not add it.
+      if(entry[0] == 0xE5)
+        continue;
+      // If the entry is free, and is the last entry, end the entire function.
+      if(entry[0] == 0x00)
+        return;
+
+      // Compare the directory entries. If they have the same first cluster
+      // numbers, they are the same entry.
+      if(targetEntry[20] == entry[20] && targetEntry[21] == entry[21] &&
+        targetEntry[26] == entry[26] && targetEntry[27] == entry[27]) {
+        // This is the entry whose size we want to update.
+        // Move the file pointer back 4 bytes and write the new size.
+        fseek(fileImgPtr, -4, SEEK_CUR);
+        putc(sizeD, fileImgPtr);
+        putc(sizeC, fileImgPtr);
+        putc(sizeB, fileImgPtr);
+        putc(sizeA, fileImgPtr);
+
+        return;
+      }
+    }
+
+    // If next cluster not EOC, set next cluster to next cluster in chain.
+    nextCluster = getNextCluster(fileImgPtr, nextCluster);
+  } while(nextCluster < EOCMIN);
+}
+
 void setShortName(unsigned char* dirEntry, char* entryName) {
   // set all to whitespace
   for (size_t i = 0; i < 11; ++i) {

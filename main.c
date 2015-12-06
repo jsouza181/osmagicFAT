@@ -78,8 +78,9 @@ int main (int argc, char *argv[]) {
       for (int j = 0; j < ofTable.entries[i].clusterCount; ++j)
         printf("%d ", ofTable.entries[i].clusterOffsets[j]);
       printf("\n");
-
     }
+
+    // Print prompt and get user input.
     printPrompt();
     if (fgets(input, 256, stdin) == NULL){
       printf("Error! Invalid input!\n");
@@ -95,7 +96,7 @@ int main (int argc, char *argv[]) {
     else if (strcmp(cmds[0], "open") == 0) {
       if (tokCount != 3) {
         printf("Error: Invalid arguments.\n");
-        printf("Expected: open <file> <flag>\n");
+        printf("Expected: open <filename> <flag>\n");
       }
       else {
         // Convert flag input string to int.
@@ -112,10 +113,18 @@ int main (int argc, char *argv[]) {
           continue;
         }
 
-        if(open(currentDir, fileImgPtr, &ofTable, cmds[1], flag))
-          printf("success!\n");
-        else
-          printf("failure\n");
+        open(currentDir, fileImgPtr, &ofTable, cmds[1], flag);
+      }
+    }
+
+    else if (strcmp(cmds[0], "close") == 0) {
+      if(tokCount != 2) {
+        printf("Error: Invalid arguments.\n");
+        printf("Expected: close <filename>\n");
+      }
+      else {
+        if(!closeFile(&ofTable, cmds[1]))
+          printf("Error: File has not been opened.\n");
       }
     } // open
 
@@ -159,7 +168,13 @@ int main (int argc, char *argv[]) {
     } // rm
 
     else if (strcmp(cmds[0], "size") == 0) {
-
+      if(tokCount != 2) {
+        printf("Error: Invalid arguments.\n");
+        printf("Expected: size <filename>\n");
+      }
+      else {
+        printf("%d bytes\n", size(currentDir, cmds[1]));
+      }
     } // size
 
     else if (strcmp(cmds[0], "cd") == 0) {
@@ -207,7 +222,34 @@ int main (int argc, char *argv[]) {
     	    }
     	  free(newDir.dirEntries);
     	}
-    }
+    } // ls
+
+    else if (strcmp(cmds[0], "read") == 0) {
+      if(tokCount != 4) {
+        printf("Error: Invalid arguments.\n");
+        printf("Expected: read <filename> <position> <number of bytes>\n");
+      }
+      else {
+        int pos, numBytes;
+        pos = atoi(cmds[2]);
+        numBytes = atoi(cmds[3]);
+        readFile(currentDir, &ofTable, fileImgPtr, cmds[1], pos, numBytes);
+      }
+    } // read
+
+    else if (strcmp(cmds[0], "write") == 0) {
+      if(tokCount != 5) {
+        printf("Error: Invalid arguments.\n");
+        printf("Expected: write <filename> <position> <number of bytes> <string>\n");
+      }
+      else {
+        int pos, numBytes;
+        pos = atoi(cmds[2]);
+        numBytes = atoi(cmds[3]);
+        writeFile(currentDir, currentDirCluster, &ofTable, fileImgPtr, cmds[1],
+                  pos, numBytes, cmds[4]);
+      }
+    } // write
 
     else if (strcmp(cmds[0], "mkdir") == 0) {
       if (tokCount != 2) {
@@ -240,13 +282,6 @@ int main (int argc, char *argv[]) {
           printf("Directory has been removed.\n");
       }
     } // rmdir
-    else if (strcmp(cmds[0], "read") == 0) {
-
-    } // read
-
-    else if (strcmp(cmds[0], "write") == 0) {
-
-    } // write
 
     else {
       printf("Invalid command. Please try again.\n");
