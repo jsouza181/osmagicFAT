@@ -81,7 +81,6 @@ int main (int argc, char *argv[]) {
     }
 */
     // Print prompt and get user input.
-    printPrompt();
     if (fgets(input, 256, stdin) == NULL){
       printf("Error! Invalid input!\n");
       exit(-1);
@@ -316,13 +315,6 @@ int main (int argc, char *argv[]) {
   return 0;
 }
 
-// Print prompt for user.
-void printPrompt(){
-  char host[128];
-  gethostname(host,128);
-  printf("%s:=> ", host);
-  fflush(stdout);
-}
 
 // Tokenize string from input. Returns the number of tokens.
 int tokenize(char* input, char** cmds){

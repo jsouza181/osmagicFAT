@@ -248,7 +248,7 @@ printf("next cluster is: %d\n", nextCluster);
   return 1;
 }
 
-unsigned int size(Directory currentDir, char *targetFile) {
+int size(Directory currentDir, char *targetFile) {
   int index;
   unsigned int firstCluster, fileSize;
   capFilename(targetFile);
@@ -308,6 +308,7 @@ int writeFile(Directory currentDir, unsigned int currentDirCluster,
   findFilenameCluster(currentDir, targetFile, &firstCluster, &index);
 
   // Check if the desired bytes to write exceed EOF.
+  printf("size is: %d\nnumbytes is: %d\nposition is %d\n", size(currentDir, targetFile), numBytes, position);
   if(size(currentDir, targetFile) - numBytes < position) {
     printf("Writing beyond size of file\n");
     // Allocate clusters as needed to make write valid.
@@ -588,7 +589,7 @@ int rm(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
     // Reverse through Cluster to zero out bytes
     for(int i = fileEntry.clusterCount; i > -1; --i){
       int clusterNum = fileEntry.clusterOffsets[i];
-      freeCluster(fileImgPtr,clusterNum);
+      setCluster(fileImgPtr, clusterNum, 0, 0, 0, 0);
     }
 
     // Remove file from Directory entry
@@ -657,7 +658,7 @@ int rmDirectory(Directory currentDir, unsigned int currentDirCluster, FILE *file
     // Reverse through Cluster to zero out bytes
     for(int i = fileEntry.clusterCount; i > -1; --i){
         int clusterNum = fileEntry.clusterOffsets[i];
-        freeCluster(fileImgPtr,clusterNum);
+        setCluster(fileImgPtr, clusterNum, 0, 0, 0, 0);
     }
 
 

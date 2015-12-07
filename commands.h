@@ -19,7 +19,7 @@ int writeFile(Directory currentDir, unsigned int currentDirCluster,
               OpenFileTable *ofTable, FILE *fileImgPtr, char *targetFile,
               int position, int numBytes, char *stringToWrite);
 
-unsigned int size(Directory currentDir, char *targetFile);
+int size(Directory currentDir, char *targetFile);
 
 
 // create a directory or a file depending on the isDir flag

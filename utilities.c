@@ -271,34 +271,6 @@ void getDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir)
 }
 
 
-void freeCluster(FILE *fileImgPtr, unsigned int clusterNumber) {
-
-  unsigned int fatOffset;
-  unsigned int fatSectorNumber;
-  unsigned int fatEntryOffset;
-
-  // FAT uses 4byte entries
-  fatOffset = clusterNumber * 4;
-
-  // First, find the sector within the FAT.
-  fatSectorNumber = fsMetadata[RESERVED_SECTOR_COUNT] +
-                    (fatOffset / fsMetadata[BYTES_PER_SECTOR]);
-
-  // Then, find the 4byte integer within the sector.
-  fatEntryOffset = fatOffset % fsMetadata[BYTES_PER_SECTOR];
-
-  // Now, fseek to the sector, and then to the offset.
-  fseek(fileImgPtr, (fatSectorNumber * fsMetadata[BYTES_PER_SECTOR]), SEEK_SET);
-  fseek(fileImgPtr, fatEntryOffset, SEEK_CUR);
-
-  // Mark cluster as free.
-  putc(0,fileImgPtr);
-  putc(0,fileImgPtr);
-  putc(0,fileImgPtr);
-  putc(0,fileImgPtr);
-
-}
-
 void rmDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir,
                     char *targetFile, int fileType){
 
