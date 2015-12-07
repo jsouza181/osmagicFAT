@@ -219,7 +219,6 @@ void getDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir)
   unsigned int currentCluster;
 
   currentCluster = clusterNumber;
-  //printSector(fileImgPtr, getSector(clusterNumber));
 
   // Add the directory entries to the array.
   // Loop until the end of cluster chain is reached.
@@ -227,7 +226,6 @@ void getDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir)
     // Seek to the cluster's first sector.
     fseek(fileImgPtr, (getSector(currentCluster) * fsMetadata[BYTES_PER_SECTOR]),
           SEEK_SET);
-    //printf("we are at: %02x\n", 512 * getSector(currentCluster));
 
     // Loop once for each directory entry that can fit in the sector.
     for(int i = 0; i < 16; ++i) {
@@ -265,7 +263,6 @@ void getDirEntries(FILE *fileImgPtr, unsigned int clusterNumber, Directory *dir)
 
     // If next cluster not EOC, set current cluster to next cluster in chain.
     currentCluster = getNextCluster(fileImgPtr, currentCluster);
-    //printf("current cluster is now: %02x\n", currentCluster);
   } while(currentCluster < EOCMIN);
 
 }

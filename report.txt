@@ -26,17 +26,38 @@ Assumptions
 - FILE_NAME and DIR_NAME will only contain the names, not multi-level paths.
 - Writing to a file is based on the assumption that the file exists in the current directory, if it exists at all.
 
+Basic Modules
+============================
+- commands.c: The main implementation of specific commands.
+- direntries.c: Utilities to handle operations specific to directory entries.
+- main.c: Handles user I/O and initializes program-wide data.
+- metadata.c: Functions to retrieve metadata from the boot sector when the program first executes.
+- utilities.c: Utility functions for miscellaneous operations as well as FAT Table access operations.
+- utilities.h: Definitions for important structs such as directory entries.
+
+Important data
+============================
+- fileImgPtr: File pointer used to navigate the FAT32 image.
+- fsMetadata: Stores important metadata from the boot sector.
+- ofTable: Table that stores all currently open files as open file entries.
+- currentDir(main scope): Directory structure which represents the current directory and is populated after each command.
+
+
 Known Bugs
 ============================
 - Program segfaults when only "enter" is the user input
 - Program can take from ~10-60 seconds to correctly reflect changes made to the file system when a file is modified/added/removed while the program is running
 
+Missing Features
+============================
+- When creating a new directory, the directory's . and .. entries are not created.
+
 Division of Labor
 ============================
-Jason Souza - file system metadata collection and storage, codebase, read, write, ls, cd
+Jason Souza - file system metadata collection and storage, codebase, open, close, read, write
 Ricardo Castilla - create, mkdir
 Philip Scott - rm, rmdir
-Conor Stephens - size, open, close
+Conor Stephens - size, ls, cd
 
 Slack Days Used
 ============================

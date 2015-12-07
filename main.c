@@ -14,7 +14,6 @@ int main (int argc, char *argv[]) {
   unsigned int currentDirCluster;
   int flag = -1;
   int runLoop = 1;
-  // int i = 0, j = 0;
 
   // Check for correct number of arguments.
   if (argc != 2) {
@@ -57,29 +56,6 @@ int main (int argc, char *argv[]) {
     // Read and store the current directory.
     getDirEntries(fileImgPtr, currentDirCluster, &currentDir);
 
-    // Testing: print contents of current directory.
-    // i and j are declared on the top. Remember to uncomment
-    // for(i = 0; i < currentDir.size; ++i) {
-    //   for(j = 0; j < 32; ++j) {
-    //     printf("%c ", currentDir.dirEntries[i][j]);
-    //   }
-    //   printf("\n");
-    // }
-    // printf("\n");
-
-    // Print prompt and get user input.
-    /*
-    for (int i = 0; i < ofTable.size; ++i) {
-      printf("Open file %d: %s, flag %d, clusCount %d, \n",
-            i, ofTable.entries[i].filename,
-            ofTable.entries[i].flag, ofTable.entries[i].clusterCount);
-      printf("Cluster's are: ");
-
-      for (int j = 0; j < ofTable.entries[i].clusterCount; ++j)
-        printf("%d ", ofTable.entries[i].clusterOffsets[j]);
-      printf("\n");
-    }
-*/
     // Print prompt and get user input.
     printf("=>");
     if (fgets(input, 256, stdin) == NULL){
@@ -159,8 +135,6 @@ int main (int argc, char *argv[]) {
         printf("\'%s\' is not a valid name\n", cmds[1]);
       }
       else {
-        // It zeros out the data, however fsck shows an orphaned long name and
-        // the cluster number
         int flag = 0;
         if(rm(currentDir, currentDirCluster, fileImgPtr, &ofTable, cmds[1], flag))
           printf("File has been removed.\n");
@@ -293,7 +267,6 @@ int main (int argc, char *argv[]) {
     free(cmds);
 
     // Free the dynamically allocated current directory.
-    // an incorrect free is happening here. Maybe check for null?
     for (int i = 0; i < currentDir.size; ++i) {
       free(currentDir.dirEntries[i]);
     }

@@ -174,6 +174,5 @@ int findFilenameCluster(Directory currentDir, char *filename,
     }
   }
   // Filename wasn't found.
-  printf("%s not found.\n", filename);
   return 0;
 }
