@@ -18,6 +18,10 @@
 // The first data sector (NOT THE FIRST BYTE!)
 #define FIRST_DATA_SECTOR 8
 
+#define NUM_ENTRIES_PER_CLUSTER 16
+
+#define ENTRY_BYTES 32
+
 extern unsigned int fsMetadata[16];
 
 int readBootSector(FILE *fileImgPtr);

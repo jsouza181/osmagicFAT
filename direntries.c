@@ -103,10 +103,15 @@ void setShortName(unsigned char* dirEntry, char* entryName) {
   for (size_t i = 0; i < 11; ++i) {
     dirEntry[i] = ' ';
   }
+  // check if it a special case
+  if (entryName[0] == '.') {
+    /* code */
+  }
+
   for (size_t i = 0; i < 8; ++i) {
     if (entryName[i] != ' ' && entryName[i] != '\0') {
       // handle the extension
-      if (entryName[i] == '.') {
+      if (entryName[i] == '.' && i != 0) {
         dirEntry[8] = entryName[i+1];
         dirEntry[9] = entryName[i+2];
         dirEntry[10] = entryName[i+3];
