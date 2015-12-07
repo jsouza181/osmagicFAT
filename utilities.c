@@ -129,6 +129,7 @@ unsigned int getNewCluster(FILE *fileImgPtr) {
   // First, seek to the FAT table.
   // FAT uses 4byte entries. Start at root cluster.
   fatOffset = fsMetadata[ROOT_CLUSTER] * 4;
+
   // Find the sector within the FAT.
   fatSectorNumber = fsMetadata[RESERVED_SECTOR_COUNT] +
                     (fatOffset / fsMetadata[BYTES_PER_SECTOR]);
@@ -154,7 +155,7 @@ unsigned int getNewCluster(FILE *fileImgPtr) {
   } while (newCluster != 0);
 
   // Set this cluster to EOC.
-  setCluster(fileImgPtr, clusterIterator, 0x0F, 0xFF, 0xFF, 0xFF);
+  setCluster(fileImgPtr, clusterIterator, 0xFF, 0xFF, 0xFF, 0xFF);
   // Return the new cluster.
   return clusterIterator;
 }
@@ -165,6 +166,7 @@ unsigned int getNewCluster(FILE *fileImgPtr) {
  */
 void linkClusters(FILE *fileImgPtr, unsigned int clusterA, unsigned int clusterB) {
   unsigned char byteA, byteB, byteC, byteD;
+  printf("Linking cluster: %d to %d \n ", clusterA, clusterB);
 
   // Separate clusterB into four bytes.
   byteA = (clusterB & 0xFF000000) >> 24;
@@ -182,26 +184,29 @@ void setCluster(FILE *fileImgPtr, unsigned int clusterNumber, unsigned char byte
   unsigned int fatSectorNumber;
   unsigned int fatEntryOffset;
 
-/****
-  UPDATE ALL FAT TABLES
-  *****/
-
   // FAT uses 4byte entries
   fatOffset = clusterNumber * 4;
-  // First, find the sector within the FAT.
-  fatSectorNumber = fsMetadata[RESERVED_SECTOR_COUNT] +
-                    (fatOffset / fsMetadata[BYTES_PER_SECTOR]);
-  // Then, find the 4byte integer within the sector.
-  fatEntryOffset = fatOffset % fsMetadata[BYTES_PER_SECTOR];
-  // Now, fseek to the sector, and then to the offset.
-  fseek(fileImgPtr, (fatSectorNumber * fsMetadata[BYTES_PER_SECTOR]), SEEK_SET);
-  fseek(fileImgPtr, fatEntryOffset, SEEK_CUR);
 
-  // Set the bytes of the cluster.
-  putc(byteD,fileImgPtr);
-  putc(byteC,fileImgPtr);
-  putc(byteB,fileImgPtr);
-  putc(byteA,fileImgPtr);
+  // Update each FAT Table
+  int tablesToUpdate = fsMetadata[NUMBER_OF_FATS];
+
+  for(int i = 0; i < tablesToUpdate; ++i) {
+    // First, find the sector within the FAT.
+    fatSectorNumber = fsMetadata[RESERVED_SECTOR_COUNT] +
+                      (i * fsMetadata[FAT_SIZE]) +
+                      (fatOffset / fsMetadata[BYTES_PER_SECTOR]);
+    // Then, find the 4byte integer within the sector.
+    fatEntryOffset = fatOffset % fsMetadata[BYTES_PER_SECTOR];
+    // Now, fseek to the sector, and then to the offset.
+    fseek(fileImgPtr, (fatSectorNumber * fsMetadata[BYTES_PER_SECTOR]), SEEK_SET);
+    fseek(fileImgPtr, fatEntryOffset, SEEK_CUR);
+
+    // Set the bytes of the cluster.
+    putc(byteD,fileImgPtr);
+    putc(byteC,fileImgPtr);
+    putc(byteB,fileImgPtr);
+    putc(byteA,fileImgPtr);
+  }
 }
 
 /*

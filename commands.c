@@ -201,6 +201,7 @@ int readFile(Directory currentDir, OpenFileTable *ofTable, FILE *fileImgPtr,
   // Seek the file pointer to the desired position's cluster.
   targetCluster = position / bytesPerCluster;
   nextCluster = targetFileEntry->clusterOffsets[targetCluster];
+printf("next cluster is: %d\n", nextCluster);
   fseek(fileImgPtr, (getSector(nextCluster) * fsMetadata[BYTES_PER_SECTOR]),
         SEEK_SET);
   // Seek the file pointer to the desired position's byte.
@@ -223,6 +224,7 @@ int readFile(Directory currentDir, OpenFileTable *ofTable, FILE *fileImgPtr,
 
   // Read the remaining clusters.
   nextCluster = getNextCluster(fileImgPtr, nextCluster);
+printf("next cluster is: %d\n", nextCluster);
   while(nextCluster < EOCMIN) {
     // Seek the file pointer to the first byte of the next cluster.
     fseek(fileImgPtr, (getSector(nextCluster) * fsMetadata[BYTES_PER_SECTOR]),
@@ -240,6 +242,7 @@ int readFile(Directory currentDir, OpenFileTable *ofTable, FILE *fileImgPtr,
       byteCounter = byteCounter - 1;
     }
     nextCluster = getNextCluster(fileImgPtr, nextCluster);
+printf("next cluster is: %d\n", nextCluster);
   }
 
   return 1;
@@ -267,6 +270,8 @@ int writeFile(Directory currentDir, unsigned int currentDirCluster,
             int position, int numBytes, char *stringToWrite) {
   OpenFileEntry *targetFileEntry;
   int bytesPerCluster = fsMetadata[BYTES_PER_SECTOR] * fsMetadata[SECTORS_PER_CLUSTER];
+
+  int stringCounter = 1;
 
   capFilename(targetFile);
 
@@ -301,12 +306,10 @@ int writeFile(Directory currentDir, unsigned int currentDirCluster,
   int index, bytesAdded;
   unsigned int firstCluster;
   findFilenameCluster(currentDir, targetFile, &firstCluster, &index);
-  bytesAdded = numBytes - (size(currentDir, targetFile) - position);
-  setFileSize(fileImgPtr, currentDirCluster, currentDir.dirEntries[index],
-              bytesAdded);
 
   // Check if the desired bytes to write exceed EOF.
   if(size(currentDir, targetFile) - numBytes < position) {
+    printf("Writing beyond size of file\n");
     // Allocate clusters as needed to make write valid.
 
     // Increase the file's size attribute to reflect the bytes we are adding.
@@ -314,15 +317,17 @@ int writeFile(Directory currentDir, unsigned int currentDirCluster,
     setFileSize(fileImgPtr, currentDirCluster, currentDir.dirEntries[index],
                 newSize);
 
-    // Calculate the number of new clusters needed to start writing at position.
-    int newClusterCount = newSize / bytesPerCluster;
+    // Calculate the number of clusters needed to start writing at position.
+    int newClusterCount = (newSize / bytesPerCluster) + 1;
 
     // Allocate any additional clusters needed.
-    unsigned int lastCluster =
-                  targetFileEntry->clusterOffsets[targetFileEntry->clusterCount];
+    unsigned int lastCluster = targetFileEntry->clusterOffsets[targetFileEntry->clusterCount - 1];
     unsigned int newCluster;
+    printf("new cluster count: %d\n", newClusterCount);
+    printf("old cluster count:%d\n ", targetFileEntry->clusterCount);
 
     for(int i = newClusterCount - targetFileEntry->clusterCount; i > 0; --i) {
+      printf("allocating new cluster\n");
       newCluster = getNewCluster(fileImgPtr);
       // Add the new cluster to open file entry's cluster chain.
       // Allocate memory for the new cluster.
@@ -339,7 +344,11 @@ int writeFile(Directory currentDir, unsigned int currentDirCluster,
       lastCluster = newCluster;
     }
 
-
+  }
+  else {
+  bytesAdded = numBytes - (size(currentDir, targetFile) - position);
+  setFileSize(fileImgPtr, currentDirCluster, currentDir.dirEntries[index],
+              bytesAdded);
   }
 
   // Seek the file pointer to the desired position's cluster.
@@ -358,14 +367,32 @@ int writeFile(Directory currentDir, unsigned int currentDirCluster,
       return 1;
     }
 
-    nextByte = 'Y';
-    printf("counter: %d -- %02X\n", byteCounter, putc(nextByte, fileImgPtr));
+    // Write the next character of the string.
+    /*
+    nextByte = stringToWrite[stringCounter];
+    stringCounter = stringCounter + 1;
+    if(stringCounter == strlen(stringToWrite))
+      stringCounter = 0;
+    putc(nextByte, fileImgPtr);
+    */
+      // Write the next character of the string.
+      nextByte = stringToWrite[stringCounter];
+      if(nextByte == '\"') {
+        stringCounter = stringCounter + 1;
+        nextByte = stringToWrite[stringCounter];
+      }
+      stringCounter = stringCounter + 1;
+      if(stringToWrite[stringCounter] == '\"') {
+        stringCounter = 1;
+      }
+      putc(nextByte, fileImgPtr);
+
 
     byteCounter = byteCounter - 1;
     targetByte = targetByte + 1;
   }
 
-  // Read the remaining clusters.
+  // Write the remaining clusters.
   nextCluster = getNextCluster(fileImgPtr, nextCluster);
   while(nextCluster < EOCMIN) {
     // Seek the file pointer to the first byte of the next cluster.
@@ -378,7 +405,16 @@ int writeFile(Directory currentDir, unsigned int currentDirCluster,
         return 1;
       }
 
-      nextByte = 'Y';
+      // Write the next character of the string.
+      nextByte = stringToWrite[stringCounter];
+      if(nextByte == '\"') {
+        stringCounter = stringCounter + 1;
+        nextByte = stringToWrite[stringCounter];
+      }
+      stringCounter = stringCounter + 1;
+      if(stringToWrite[stringCounter] == '\"') {
+        stringCounter = 1;
+      }
       putc(nextByte, fileImgPtr);
 
       byteCounter = byteCounter - 1;

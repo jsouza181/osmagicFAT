@@ -17,6 +17,8 @@
 #define ROOT_DIR_SECTORS 7
 // The first data sector (NOT THE FIRST BYTE!)
 #define FIRST_DATA_SECTOR 8
+// Free clusters info?
+#define FS_INFO 9
 
 #define NUM_ENTRIES_PER_CLUSTER 16
 

@@ -80,6 +80,14 @@ unsigned int firstDataSector(FILE *fileImgPtr) {
           fsMetadata[FAT_SIZE]) + fsMetadata[ROOT_DIR_SECTORS];
 }
 
+unsigned int fileSystemInfo(FILE *fileImgPtr) {
+  fseek(fileImgPtr, 48, SEEK_SET);
+  unsigned int byteA = getc(fileImgPtr);
+  unsigned int byteB = getc(fileImgPtr);
+
+  return swapTwoBytes(byteA, byteB);
+}
+
 int readBootSector(FILE *fileImgPtr) {
 
   //Gather important boot sector info.

@@ -59,6 +59,9 @@ note: make sure fsck.fat is in the same directory as runCheck.bash
 ### Known Bugs ###
 - Program segfaults when only "enter" is the user input
 - Program can take from ~10-60 seconds to correctly reflect changes made to the file system when a file is modified/added/removed while the program is running
+- After allocating new clusters, FSCK warns that the "free cluster summary" is wrong.
+  Upon further inspection, it was found that this was due to FAT32-specific metadata in the reserved sector which stores the "last checked number of free clusters".
+  This value does not seem to actually be used for any basic FAT32 operations, so it does not compromise the integrity of the files.
 
 ### Assumptions ###
 - Writing to a file is based on the assumption that the file exists in the current directory, if it exists at all.
