@@ -50,7 +50,6 @@ int main (int argc, char *argv[]) {
     char **cmds = (char**) malloc(6*sizeof(char*));
     for (int itr = 0; itr < 6; itr++)
       cmds[itr]=(char*) malloc(1*sizeof(char));
-
     // Initialize current directory data
     currentDir.dirEntries = (unsigned char **) malloc(sizeof(unsigned char *));
     currentDir.size = 0;
@@ -294,6 +293,7 @@ int main (int argc, char *argv[]) {
     free(cmds);
 
     // Free the dynamically allocated current directory.
+    // an incorrect free is happening here. Maybe check for null?
     for (int i = 0; i < currentDir.size; ++i) {
       free(currentDir.dirEntries[i]);
     }

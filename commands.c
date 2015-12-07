@@ -428,8 +428,10 @@ int writeFile(Directory currentDir, unsigned int currentDirCluster,
 int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
     char* filename, int isDir) {
   fpos_t pos;
-  unsigned char* newEntry = NULL;
+  unsigned char newEntry[32];
   unsigned char tmpEntry[32];
+  unsigned char byteA, byteB, byteC, byteD;
+  unsigned int clusterNum = 0;
   unsigned int entered = 0;
   // File's first cluster (used to build and then store cluster chain).
   unsigned int firstCluster = 0;
@@ -439,20 +441,19 @@ int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPt
   // Used to access the file's dir entry.
   int fileIndex = 0;
   int *indexPtr = &fileIndex;
-  int bytesPerCluster = fsMetadata[BYTES_PER_SECTOR] * fsMetadata[SECTORS_PER_CLUSTER];
-  int entriesPerCluster = bytesPerCluster / 32;
-  int totalEntries = currentDir.size;
+  // int bytesPerCluster = fsMetadata[BYTES_PER_SECTOR] * fsMetadata[SECTORS_PER_CLUSTER];
+  // int entriesPerCluster = bytesPerCluster / 32;
+  // int totalEntries = currentDir.size;
 
   if (filename != NULL) {
     capFilename(filename);
 
     // check if filename exists in current directory
-    if(findFilenameCluster(currentDir, filename, firstClusterPtr, indexPtr)) {
+    if (findFilenameCluster(currentDir, filename, firstClusterPtr, indexPtr)) {
       printf("Error: a file or directory with that name already exists\n");
       return 0;
     }
     else {
-      newEntry = (unsigned char*) malloc(0 * sizeof(unsigned char *));
       // lets set all bytes to 0 first
       for (size_t i = 0; i < 32; ++i) {
         newEntry[i] = 0x00;
@@ -473,47 +474,66 @@ int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPt
         // create a new entry in the next available cluster
         newEntry[11] = 0x00;
       } // else
-      // check if cluster has enough space
-      if (totalEntries % entriesPerCluster == 0 && totalEntries != 0) {
-        // it is full
-        printf("Allocating new cluster\n");
-        // code here
-      }
-      else {
-        // add to the last entry in cluster
-        // write to the cluster
-        do {
-          fseek(fileImgPtr, (getSector(currentCluster) * fsMetadata[BYTES_PER_SECTOR]),
-                SEEK_SET);
-          // iterate through entries
-          for (size_t i = 0; i < 16; ++i) {
-            // save position
-            fgetpos(fileImgPtr, &pos);
-            // iterate through entry data
-            for (size_t j = 0; j < 32; ++j) {
-              tmpEntry[j] = getc(fileImgPtr);
-            } // for
-            // check if entry is empty, if so enter data
-            if (tmpEntry[0] == 0xE5 || tmpEntry[0] == 0x00) {
-              fsetpos(fileImgPtr, &pos);
-              // overwrite entry with created one
-              for (size_t j = 0; j < 32; ++j) {
-                putc(newEntry[j], fileImgPtr);
-              } // for
-              entered = 1;
-              // need to update the directory structure (fat tables)
-              break; // done, exit loop
-            } // if empty
-          } // for
+      // get the next cluster number
+      clusterNum = getNewCluster(fileImgPtr);
+      // Separate clusterNum into four bytes.
+      if (0 != clusterNum) {
+        byteA = (clusterNum & 0xFF000000) >> 24;
+        byteB = (clusterNum & 0x00FF0000) >> 16;
+        byteC = (clusterNum & 0x0000FF00) >> 8;
+        byteD = (clusterNum & 0x000000FF);
 
-          if (!entered) {
-            currentCluster = getNextCluster(fileImgPtr, currentCluster);
+        newEntry[20] = byteB;
+        newEntry[21] = byteA;
+        newEntry[26] = byteD;
+        newEntry[27] = byteC;
+      } // if
+      else {
+        printf("Unable to allocate cluster for new entry\n");
+        return 0;
+      }
+
+      // write to the cluster
+      do {
+        fseek(fileImgPtr, (getSector(currentCluster) * fsMetadata[BYTES_PER_SECTOR]),
+              SEEK_SET);
+        // iterate through entries
+        for (size_t i = 0; i < 16; ++i) {
+          // save position
+          fgetpos(fileImgPtr, &pos);
+          // iterate through entry data
+          for (size_t j = 0; j < 32; ++j) {
+            tmpEntry[j] = getc(fileImgPtr);
+          } // for
+          // check if entry is empty, if so enter data
+          if (tmpEntry[0] == 0xE5 || tmpEntry[0] == 0x00) {
+            fsetpos(fileImgPtr, &pos);
+            // overwrite entry with created one
+            for (size_t j = 0; j < 32; ++j) {
+              putc(newEntry[j], fileImgPtr);
+            } // for
+            entered = 1;
+            break; // done, exit loop
+          } // if empty
+        } // for
+
+        if (!entered) {
+          currentCluster = getNextCluster(fileImgPtr, currentCluster);
+          if (currentCluster >= EOCMIN ) {
+            printf("Allocating new cluster\n");
+            // need to allocate a new cluster
+            currentCluster = getNewCluster(fileImgPtr);
+            if (0 != currentCluster) {
+              // link both clusters if it was able to allocate a new one
+              linkClusters(fileImgPtr, currentDirCluster, currentCluster);
+            }
+            else {
+              printf("Unable to allocate new cluster in current directory chain\n");
+            }
           }
-        } while(currentCluster < EOCMIN && !entered);
-      } // else
-      // for (size_t i = 0; i < 29; ++i) {
-      //   printf("%u\n", (unsigned int)newEntry[i]);
-      // }
+        }
+      } while(currentCluster < EOCMIN && !entered);
+
       return 1;
     } // else
   } // if
