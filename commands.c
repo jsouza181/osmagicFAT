@@ -167,7 +167,7 @@ int readFile(Directory currentDir, OpenFileTable *ofTable, FILE *fileImgPtr,
       break;
     }
     // File not found.
-    else if((i + 1) == ofTable->size) {
+    else if((i + 1) == ofTable->size || ofTable->size == 0) {
       printf("Error: File has not been opened\n");
       return 0;
     }
@@ -282,7 +282,7 @@ int writeFile(Directory currentDir, unsigned int currentDirCluster,
       break;
     }
     // File not found.
-    else if((i + 1) == ofTable->size) {
+    else if((i + 1) == ofTable->size || ofTable->size == 0) {
       printf("Error: File has not been opened\n");
       return 0;
     }

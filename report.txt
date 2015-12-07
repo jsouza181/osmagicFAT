@@ -22,12 +22,9 @@ Steps taken to solve problem
 Assumptions
 ============================
 - File and directory names will not contain spaces.
-- You may assume that STRING always begins and ends with QUOTES
-- FILE_NAME and DIR_NAME will only contain the names, not multi-level paths. For example,
-"create afile" will create a file named afile in the current directory. It does not have to support
-commands like "create adirectory/afile"
-- Unless specified, you may choose any reasonable data type for the arguments and return values
-for your functions
+- write command STRING always begins and ends with QUOTES
+- FILE_NAME and DIR_NAME will only contain the names, not multi-level paths.
+- Writing to a file is based on the assumption that the file exists in the current directory, if it exists at all.
 
 Known Bugs
 ============================
@@ -36,27 +33,29 @@ Known Bugs
 
 Division of Labor
 ============================
-Jason Souza - utilities, boot metadata parsing and collection, and codebase
+Jason Souza - file system metadata collection and storage, codebase, read, write, ls, cd
 Ricardo Castilla - create, mkdir
 Philip Scott - rm, rmdir
-Conor Stephens - size, ls
+Conor Stephens - size, open, close
 
 Slack Days Used
 ============================
-Jason Souza - 1
+Jason Souza - 2
 Ricardo Castilla - 1
 Philip Scott - 1
-Conor Stephens - 1
+Conor Stephens - 0
 
 Log
 ============================
-- 12/4 - Project completed
+- 12/6 - Project completed
 
 - 12/3 - Bug fixing and cleanup
 
 - 12/1 - Group meeting. Bug fixing, and code coupling
 
-- 11/29 - Testing. Bug-digging and report created
+- 11/29 - Advanced implementation: read, write, rm, create
+
+- 11/26 - Basic implementation: ls, cd
 
 - 11/15 - Created most structs needed
 

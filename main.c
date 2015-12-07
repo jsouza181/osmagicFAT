@@ -81,6 +81,7 @@ int main (int argc, char *argv[]) {
     }
 */
     // Print prompt and get user input.
+    printf("=>");
     if (fgets(input, 256, stdin) == NULL){
       printf("Error! Invalid input!\n");
       exit(-1);
