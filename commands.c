@@ -429,8 +429,8 @@ int writeFile(Directory currentDir, unsigned int currentDirCluster,
 int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPtr,
     char* filename, int isDir) {
   fpos_t pos;
-  unsigned char newEntry[32];
-  unsigned char tmpEntry[32];
+  unsigned char newEntry[ENTRY_BYTES];
+  unsigned char tmpEntry[ENTRY_BYTES];
   unsigned char byteA, byteB, byteC, byteD;
   unsigned int clusterNum = 0;
   unsigned int entered = 0;
@@ -443,7 +443,7 @@ int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPt
   int fileIndex = 0;
   int *indexPtr = &fileIndex;
   // int bytesPerCluster = fsMetadata[BYTES_PER_SECTOR] * fsMetadata[SECTORS_PER_CLUSTER];
-  // int entriesPerCluster = bytesPerCluster / 32;
+  // int entriesPerCluster = bytesPerCluster / ENTRY_BYTES;
   // int totalEntries = currentDir.size;
 
   if (filename != NULL) {
@@ -456,25 +456,11 @@ int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPt
     }
     else {
       // lets set all bytes to 0 first
-      for (size_t i = 0; i < 32; ++i) {
+      for (size_t i = 0; i < ENTRY_BYTES; ++i) {
         newEntry[i] = 0x00;
       }
       setShortName(newEntry, filename);
-      // set the name of the entry
-      // - 3 for the extensions
-      // for (size_t i = 0; i < sizeof(filename) && i < MAX_FILENAME_SIZE - 3; ++i) {
-      //   newEntry[i] = filename[i];
-      // } // for
 
-      if (isDir) {
-        printf("Creating directory as %s\n", filename);
-        newEntry[11] = 0x10; // set all bits to 0 except directory bit
-      } // if
-      else {
-        printf("Creating file as %s\n", filename);
-        // create a new entry in the next available cluster
-        newEntry[11] = 0x00;
-      } // else
       // get the next cluster number
       clusterNum = getNewCluster(fileImgPtr);
       // Separate clusterNum into four bytes.
@@ -494,23 +480,33 @@ int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPt
         return 0;
       }
 
+      if (isDir) {
+        printf("Creating directory as %s\n", filename);
+        newEntry[11] = 0x10; // set all bits to 0 except directory bit
+      } // if
+      else {
+        printf("Creating file as %s\n", filename);
+        // create a new entry in the next available cluster
+        newEntry[11] = 0x00;
+      } // else
+
       // write to the cluster
       do {
         fseek(fileImgPtr, (getSector(currentCluster) * fsMetadata[BYTES_PER_SECTOR]),
               SEEK_SET);
         // iterate through entries
-        for (size_t i = 0; i < 16; ++i) {
+        for (size_t i = 0; i < NUM_ENTRIES_PER_CLUSTER; ++i) {
           // save position
           fgetpos(fileImgPtr, &pos);
           // iterate through entry data
-          for (size_t j = 0; j < 32; ++j) {
+          for (size_t j = 0; j < ENTRY_BYTES; ++j) {
             tmpEntry[j] = getc(fileImgPtr);
           } // for
           // check if entry is empty, if so enter data
           if (tmpEntry[0] == 0xE5 || tmpEntry[0] == 0x00) {
             fsetpos(fileImgPtr, &pos);
             // overwrite entry with created one
-            for (size_t j = 0; j < 32; ++j) {
+            for (size_t j = 0; j < ENTRY_BYTES; ++j) {
               putc(newEntry[j], fileImgPtr);
             } // for
             entered = 1;
@@ -527,13 +523,25 @@ int create(Directory currentDir, unsigned int currentDirCluster, FILE *fileImgPt
             if (0 != currentCluster) {
               // link both clusters if it was able to allocate a new one
               linkClusters(fileImgPtr, currentDirCluster, currentCluster);
+              fgetpos(fileImgPtr, &pos);
+              fseek(fileImgPtr, (getSector(currentCluster) * fsMetadata[BYTES_PER_SECTOR]),
+                    SEEK_SET);
+              for (size_t i = 0; i < NUM_ENTRIES_PER_CLUSTER; ++i) {
+                if (i == NUM_ENTRIES_PER_CLUSTER - 1) {
+                  putc(0x00, fileImgPtr);
+                }
+                else {
+                  putc(0xE5, fileImgPtr);
+                } // else
+              } // for
+              fsetpos(fileImgPtr, &pos);
             }
             else {
               printf("Unable to allocate new cluster in current directory chain\n");
             }
           }
         }
-      } while(currentCluster < EOCMIN && !entered);
+      } while (currentCluster < EOCMIN && !entered);
 
       return 1;
     } // else

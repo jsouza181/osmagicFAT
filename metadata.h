@@ -20,6 +20,10 @@
 // Free clusters info?
 #define FS_INFO 9
 
+#define NUM_ENTRIES_PER_CLUSTER 16
+
+#define ENTRY_BYTES 32
+
 extern unsigned int fsMetadata[16];
 
 int readBootSector(FILE *fileImgPtr);
