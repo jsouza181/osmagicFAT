@@ -69,6 +69,7 @@ int main (int argc, char *argv[]) {
     // printf("\n");
 
     // Print prompt and get user input.
+    /*
     for (int i = 0; i < ofTable.size; ++i) {
       printf("Open file %d: %s, flag %d, clusCount %d, \n",
             i, ofTable.entries[i].filename,
@@ -79,7 +80,7 @@ int main (int argc, char *argv[]) {
         printf("%d ", ofTable.entries[i].clusterOffsets[j]);
       printf("\n");
     }
-
+*/
     // Print prompt and get user input.
     printPrompt();
     if (fgets(input, 256, stdin) == NULL){
